@@ -1,5 +1,9 @@
 .PHONY: help start stop restart status logs logs-webui logs-search update \
-        models models-light models-all kimi-setup clean
+        models models-light models-all clean \
+        load unload switch \
+        sandbox-setup sandbox-stop sandbox-status \
+        test test-model monitor monitor-live security security-live \
+        check-ram models-list models-check-new ollama-check stop-all
 
 DOCKER_DIR := docker
 SCRIPTS_DIR := scripts
@@ -157,6 +161,18 @@ sandbox-status: ## Statut et isolation du sandbox
 	@docker inspect ollama-sandbox --format '{{range $$k,$$v := .NetworkSettings.Networks}}  ● {{$$k}}\n{{end}}' 2>/dev/null || true
 	@echo "\n$(CYAN)── Modèles dans le sandbox ───────────────────$(RESET)"
 	@OLLAMA_HOST=127.0.0.1:11435 ollama list 2>/dev/null || echo "  Sandbox non accessible"
+
+##@ Gestion RAM — chargement à la demande
+load: ## Charger un modèle en RAM (usage: make load MODEL=gemma4:31b)
+	@[ -n "$(MODEL)" ] || (echo "$(RED)Usage : make load MODEL=<nom>$(RESET)" && exit 1)
+	@bash $(SCRIPTS_DIR)/load-model.sh "$(MODEL)"
+
+switch: ## Changer de modèle — décharge l'actuel, charge le nouveau (usage: make switch MODEL=llama3.3:70b)
+	@[ -n "$(MODEL)" ] || (echo "$(RED)Usage : make switch MODEL=<nom>$(RESET)" && exit 1)
+	@bash $(SCRIPTS_DIR)/load-model.sh "$(MODEL)"
+
+unload: ## Décharger tous les modèles de la RAM (libère la mémoire)
+	@bash $(SCRIPTS_DIR)/load-model.sh --unload
 
 ##@ Tests
 test: ## Tester tous les modèles un par un (Kimi exclu) — rapport généré dans tests/results/
