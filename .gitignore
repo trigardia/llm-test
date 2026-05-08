@@ -1,0 +1,11 @@
+# Drafts personnels — ne pas commiter
+drafts/
+
+# Données générées
+tests/generated/
+
+# Claude interne
+.claude/
+
+# macOS
+.DS_Store
