@@ -55,7 +55,7 @@ ollama run codestral:22b
 > Agentic coding — édition multi-fichiers · refactoring de projet entier
 
 ```bash
-ollama pull devstral:24b
+ollama pull devstral-small-2
 ```
 
 | Attribut | Valeur |
@@ -71,7 +71,7 @@ ollama pull devstral:24b
 - Respecte les conventions d'architecture : impose des séparations propres entre couches
 
 ```bash
-ollama run devstral:24b
+ollama run devstral-small-2
 ```
 
 ---
@@ -108,7 +108,7 @@ ollama run llama3.3:70b-instruct-q5_K_M
 > Pentest automatisé · Scanning de sécurité rapide · OASIS
 
 ```bash
-ollama pull llama3.1:8b
+ollama pull phi4-reasoning
 ```
 
 | Attribut | Valeur |
@@ -129,7 +129,7 @@ ollama pull llama3.1:8b
 npm install -g promptfoo          # Red-teaming automatisé
 pip install oasis-security        # Scanner sécurité OWASP
 
-ollama run llama3.1:8b
+ollama run phi4-reasoning
 ```
 
 ---
@@ -138,7 +138,7 @@ ollama run llama3.1:8b
 > Raisonnement structuré · Architecture · Analyse de patterns
 
 ```bash
-ollama pull phi4:14b
+ollama pull phi4-reasoning
 ```
 
 | Attribut | Valeur |
@@ -154,7 +154,7 @@ ollama pull phi4:14b
 - Bon pour analyser si ton code Symfony respecte les **principes SOLID**
 
 ```bash
-ollama run phi4:14b
+ollama run phi4-reasoning
 ```
 
 ---
@@ -186,11 +186,11 @@ ollama run gemma4:31b
 
 ---
 
-## Modèle 7 — Kimi K2.6 · Moonshot AI (Chine) 🇨🇳 ⚠️ Sandboxé
+## Modèle 7 — qwen3.6:35b · Moonshot AI (Chine) 🇨🇳 ⚠️ Sandboxé
 > Meilleur coding open source — usage restreint au code non sensible
 
 ```bash
-ollama pull kimi-k2.6
+ollama pull qwen3.6:35b
 ```
 
 | Attribut | Valeur |
@@ -220,12 +220,12 @@ ollama pull kimi-k2.6
 
 ```bash
 # Créer le réseau isolé (pas d'accès internet)
-docker network create --internal kimi-sandbox
+docker network create --internal sandbox-net
 
 # Lancer Ollama dans un container sandboxé
 docker run -d \
-  --name ollama-kimi \
-  --network kimi-sandbox \
+  --name ollama-sandbox \
+  --network sandbox-net \
   --cap-drop ALL \
   --cap-add NET_BIND_SERVICE \
   --read-only \
@@ -240,14 +240,14 @@ docker run -d \
   ollama/ollama
 
 # Charger Kimi dans le container
-docker exec ollama-kimi ollama pull kimi-k2.6
+docker exec ollama-sandbox ollama pull qwen3.6:35b
 
 # Utiliser Kimi via le port dédié (11435 ≠ 11434 pour les autres modèles)
-OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6
+ollama run qwen3.6:35b
 ```
 
 **Ce que le sandbox impose :**
-- `--network kimi-sandbox --internal` → pas d'accès internet
+- `--network sandbox-net --internal` → pas d'accès internet
 - `-v $(pwd):/workspace:ro` → lecture seule, dossier courant uniquement
 - `--cap-drop ALL` → zéro privilege Linux
 - `--read-only` → système de fichiers container en lecture seule
@@ -255,7 +255,7 @@ OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6
 
 ### Hook de validation des sorties Kimi
 
-Créer `/Users/devsecops/projects/macbook/scripts/kimi-guard.sh` :
+Créer `/Users/devsecops/projects/macbook/scripts/sandbox-guard.sh` :
 
 ```bash
 #!/usr/bin/env bash
@@ -290,18 +290,18 @@ echo "$INPUT"
 ```
 
 ```bash
-chmod +x /Users/devsecops/projects/macbook/scripts/kimi-guard.sh
+chmod +x /Users/devsecops/projects/macbook/scripts/sandbox-guard.sh
 
 # Usage : toujours passer la sortie de Kimi dans le guard
-OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "ta question" | ./scripts/kimi-guard.sh
+ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
 ### Workflow sécurisé avec Kimi
 
 ```
-Kimi K2.6 (sandbox Docker)
+qwen3.6:35b (sandbox Docker)
         ↓
-  kimi-guard.sh (détection patterns dangereux)
+  sandbox-guard.sh (détection patterns dangereux)
         ↓
   Llama 3.3 70B (audit sécurité de la sortie)
         ↓
@@ -317,16 +317,16 @@ Kimi K2.6 (sandbox Docker)
 ollama pull codestral:22b
 
 # 2. Agentic coding multi-fichiers
-ollama pull devstral:24b
+ollama pull devstral-small-2
 
 # 3. Architecture + revue sécurité approfondie
 ollama pull llama3.3:70b-instruct-q5_K_M
 
 # 4. Scanning sécurité rapide (pipeline CI)
-ollama pull llama3.1:8b
+ollama pull phi4-reasoning
 
 # 5. Raisonnement architecture
-ollama pull phi4:14b
+ollama pull phi4-reasoning
 
 # 6. Agents & tool-calling sécurité
 ollama pull gemma4:31b
@@ -334,16 +334,16 @@ ollama pull gemma4:31b
 # Embeddings pour RAG (recherche dans ta codebase Symfony)
 ollama pull nomic-embed-text
 
-# 7. Kimi K2.6 — dans le sandbox Docker uniquement (voir section Sandbox)
-docker network create --internal kimi-sandbox
-docker run -d --name ollama-kimi --network kimi-sandbox \
+# 7. qwen3.6:35b — dans le sandbox Docker uniquement (voir section Sandbox)
+docker network create --internal sandbox-net
+docker run -d --name ollama-sandbox --network sandbox-net \
   --cap-drop ALL --read-only \
   --tmpfs /tmp:size=512m --tmpfs /root/.ollama:size=100g \
   -v $(pwd):/workspace:ro \
   -e OLLAMA_HOST=127.0.0.1 \
   --memory="90g" --cpus="16" \
   -p 127.0.0.1:11435:11434 ollama/ollama
-docker exec ollama-kimi ollama pull kimi-k2.6
+docker exec ollama-sandbox ollama pull qwen3.6:35b
 ```
 
 ---
@@ -355,13 +355,13 @@ docker exec ollama-kimi ollama pull kimi-k2.6
 | Écrire du code Symfony / PHP | `codestral:22b` |
 | Écrire du React / Node.js / JS | `codestral:22b` |
 | Scripts Bash / DevOps | `codestral:22b` |
-| Refactoring multi-fichiers | `devstral:24b` |
+| Refactoring multi-fichiers | `devstral-small-2` |
 | Revue d'architecture (Clean / DDD) | `llama3.3:70b` |
 | Analyse OWASP / vulnérabilités | `llama3.3:70b` |
-| Pentest automatisé (CI/CD) | `llama3.1:8b` + OASIS |
-| Choix de pattern / 2ème opinion | `phi4:14b` |
+| Pentest automatisé (CI/CD) | `phi4-reasoning` + OASIS |
+| Choix de pattern / 2ème opinion | `phi4-reasoning` |
 | Agents sécurité / tool-calling | `gemma4:31b` |
-| Coding pur non sensible (max perf) | `kimi-k2.6` dans sandbox Docker → validé par `llama3.3:70b` |
+| Coding pur non sensible (max perf) | `qwen3.6:35b` dans sandbox Docker → validé par `llama3.3:70b` |
 
 ---
 
@@ -370,10 +370,10 @@ docker exec ollama-kimi ollama pull kimi-k2.6
 | Modèles chargés simultanément | RAM utilisée | RAM libre |
 |-------------------------------|-------------|-----------|
 | codestral:22b + llama3.3:70b | ~70 Go | 58 Go |
-| devstral:24b + llama3.3:70b | ~70 Go | 58 Go |
-| codestral + llama3.1:8b + phi4 | ~36 Go | 92 Go |
-| kimi-k2.6 (sandbox) + llama3.3:70b (audit) | ~123 Go | 5 Go ⚠️ limite |
-| kimi-k2.6 seul (sandbox) | ~75 Go | 53 Go |
+| devstral-small-2 + llama3.3:70b | ~70 Go | 58 Go |
+| codestral + phi4-reasoning + phi4 | ~36 Go | 92 Go |
+| qwen3.6:35b (sandbox) + llama3.3:70b (audit) | ~123 Go | 5 Go ⚠️ limite |
+| qwen3.6:35b seul (sandbox) | ~75 Go | 53 Go |
 
 ---
 
@@ -382,10 +382,10 @@ docker exec ollama-kimi ollama pull kimi-k2.6
 | Modèle | Origine | Confiance | Taille | Statut |
 |--------|---------|-----------|--------|--------|
 | codestral:22b | Mistral 🇫🇷 | ✅ | ~22 Go | ⬜ À installer |
-| devstral:24b | Mistral 🇫🇷 | ✅ | ~22 Go | ⬜ À installer |
+| devstral-small-2 | Mistral 🇫🇷 | ✅ | ~22 Go | ⬜ À installer |
 | llama3.3:70b Q5 | Meta 🇺🇸 | ✅ | ~48 Go | ⬜ À installer |
-| llama3.1:8b | Meta 🇺🇸 | ✅ | ~5 Go | ⬜ À installer |
-| phi4:14b | Microsoft 🇺🇸 | ✅ | ~9 Go | ⬜ À installer |
+| phi4-reasoning | Meta 🇺🇸 | ✅ | ~5 Go | ⬜ À installer |
+| phi4-reasoning | Microsoft 🇺🇸 | ✅ | ~9 Go | ⬜ À installer |
 | gemma4:31b | Google 🇺🇸 | ✅ | ~20 Go | ⬜ À installer |
 | nomic-embed-text | Nomic 🇺🇸 | ✅ | ~274 Mo | ⬜ À installer |
-| kimi-k2.6 | Moonshot 🇨🇳 | ⚠️ Sandbox Docker | ~75 Go | ⬜ À installer |
+| qwen3.6:35b | Moonshot 🇨🇳 | ⚠️ Sandbox Docker | ~75 Go | ⬜ À installer |

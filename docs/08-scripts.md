@@ -8,7 +8,7 @@ Tous les scripts se trouvent dans `scripts/`. Ils sont appelés par le Makefile 
 
 | Script | Rôle | Appelé par |
 |--------|------|-----------|
-| `kimi-guard.sh` | Filtre de sécurité obligatoire pour les sorties Kimi K2.6 | Manuel / pipeline |
+| `sandbox-guard.sh` | Filtre de sécurité obligatoire pour les sorties qwen3.6:35b | Manuel / pipeline |
 | `monitor.sh` | Monitoring RAM · température · ventilateurs · modèles | `make monitor` / `make monitor-live` |
 | `check-resources.sh` | Garde-fou RAM avant chargement d'un modèle | `make check-ram` / `make models*` |
 | `security-perf-monitor.sh` | Audit sécurité réseau + performance stack | `make security` / `make security-live` |
@@ -16,24 +16,24 @@ Tous les scripts se trouvent dans `scripts/`. Ils sont appelés par le Makefile 
 
 ---
 
-## `kimi-guard.sh`
+## `sandbox-guard.sh`
 
 ### Rôle
-Filtre **obligatoire** appliqué à toute sortie du modèle Kimi K2.6. Détecte et bloque :
+Filtre **obligatoire** appliqué à toute sortie du modèle qwen3.6:35b. Détecte et bloque :
 - Exfiltration de chemins système ou credentials
 - Sorties contenant des tokens, secrets ou données sensibles
 - Contenu suspect nécessitant validation humaine
 
 ### Usage
 ```bash
-OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "ta question" | ./scripts/kimi-guard.sh
+ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
 ### Workflow complet Kimi
 ```
-Prompt → Kimi K2.6 (port 11435)
+Prompt → qwen3.6:35b (port 11435)
               ↓
-        kimi-guard.sh          ← ce script
+        sandbox-guard.sh          ← ce script
               ↓
     Validation Llama 3.3 70B
               ↓
@@ -44,8 +44,8 @@ Prompt → Kimi K2.6 (port 11435)
 
 ### Rendre exécutable
 ```bash
-chmod +x scripts/kimi-guard.sh
-# ou : make kimi-setup (le fait automatiquement)
+chmod +x scripts/sandbox-guard.sh
+# ou : make qwen-pull (le fait automatiquement)
 ```
 
 ---
@@ -130,7 +130,7 @@ Audit combiné sécurité + performance de toute la stack. Détecte les mauvaise
 |-------------|---------------------|
 | Ports réseau | Tous les ports doivent écouter sur `127.0.0.1`, jamais `0.0.0.0` |
 | Containers privileged | Aucun container ne doit tourner en mode `privileged` |
-| Isolation Kimi | Le container `ollama-kimi` doit être sur `kimi-sandbox` uniquement |
+| Isolation Kimi | Le container `ollama-sandbox` doit être sur `sandbox-net` uniquement |
 | Secrets git | `docker/.env` ne doit pas apparaître dans `git status` |
 | Connexions sortantes | Détecte les connexions réseau inattendues depuis les containers |
 
@@ -200,5 +200,5 @@ Une fois par semaine — intégrable dans une tâche cron ou un pipeline CI.
 chmod +x scripts/*.sh
 
 # Ou via Makefile lors du setup Kimi :
-make kimi-setup
+make qwen-pull
 ```

@@ -28,7 +28,7 @@ ollama ps
 ollama run codestral:22b
 
 # Lancer avec une question directe
-ollama run llama3.1:8b "Explique le pattern Repository en PHP"
+ollama run phi4-reasoning "Explique le pattern Repository en PHP"
 
 # Arrêter un modèle de la mémoire
 ollama stop codestral:22b
@@ -36,14 +36,14 @@ ollama stop codestral:22b
 
 ---
 
-## Workflow Kimi K2.6 (sandbox obligatoire)
+## Workflow qwen3.6:35b (sandbox obligatoire)
 
 ```bash
 # Vérifier que le container Kimi tourne
-docker ps | grep ollama-kimi
+docker ps | grep ollama-sandbox
 
 # Utiliser Kimi avec le filtre de sécurité
-OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "ta question" | ./scripts/kimi-guard.sh
+ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
 **Rappel** : Ne jamais envoyer à Kimi des secrets, tokens, code propriétaire ou chemins sensibles.
@@ -55,13 +55,13 @@ OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "ta question" | ./scripts/kimi-
 | Tâche | Modèle recommandé |
 |-------|------------------|
 | Écrire du code PHP/JS/Python/Java | `codestral:22b` |
-| Refactoring multi-fichiers / Ansible | `devstral:24b` |
+| Refactoring multi-fichiers / Ansible | `devstral-small-2` |
 | Architecture K8s / Revue OWASP / RedHat | `llama3.3:70b` |
-| Scan rapide CI/CD / Scripts Linux | `llama3.1:8b` |
-| Design patterns Java / SOLID / Architecture | `phi4:14b` |
+| Scan rapide CI/CD / Scripts Linux | `phi4-reasoning` |
+| Design patterns Java / SOLID / Architecture | `phi4-reasoning` |
 | Agents ELK / Monitoring / Tool-calling | `gemma4:31b` |
-| Optimisation Redis / Performance | `codestral:22b` ou `phi4:14b` |
-| Coding non sensible (rapide) | `kimi-k2.6` (sandbox) |
+| Optimisation Redis / Performance | `codestral:22b` ou `phi4-reasoning` |
+| Coding non sensible (rapide) | `qwen3.6:35b` (sandbox) |
 | Recherche dans documents / Logs ELK | `nomic-embed-text` + RAG |
 
 ---

@@ -14,42 +14,40 @@ REPORT="$RESULTS_DIR/rapport-$(date '+%Y%m%d-%H%M%S').md"
 RAM_MARGIN_GB=20
 
 # ── Ordre des modèles (léger → lourd) ──────────────────────
-MODELS="nomic-embed-text llama3.1:8b phi4:14b codestral:22b devstral:24b gemma4:31b llama3.3:70b"
+MODELS="nomic-embed-text-v2-moe phi4-reasoning codestral:22b devstral-small-2 gemma4:31b llama3.3:70b qwen3.6:35b"
 
 # ── Taille en Go par modèle ─────────────────────────────────
 model_size() {
     case "$1" in
-        nomic-embed-text) echo 0 ;;
-        llama3.1:8b)      echo 5 ;;
-        phi4:14b)         echo 9 ;;
-        codestral:22b)    echo 14 ;;
-        devstral:24b)     echo 15 ;;
-        gemma4:31b)       echo 20 ;;
-        gemma4:31b-bf16)  echo 62 ;;
-        llama3.3:70b)     echo 43 ;;
-        qwen2.5-coder:32b) echo 19 ;;
-        *)                echo 0 ;;
+        nomic-embed-text-v2-moe) echo 1  ;;
+        phi4-reasoning)          echo 9  ;;
+        codestral:22b)           echo 14 ;;
+        devstral-small-2)        echo 15 ;;
+        gemma4:31b)              echo 20 ;;
+        gemma4:31b-bf16)         echo 62 ;;
+        llama3.3:70b)            echo 43 ;;
+        qwen3.6:35b)             echo 24 ;;
+        qwen3.6:27b)             echo 17 ;;
+        *)                       echo 0  ;;
     esac
 }
 
 # ── Prompt de test par modèle ───────────────────────────────
 model_prompt() {
     case "$1" in
-        nomic-embed-text)
-            echo "LLM local sécurisé sur Apple Silicon M5 Max" ;;
-        llama3.1:8b)
-            echo "En une phrase : quelle est la première règle OWASP Top 10 pour les API ?" ;;
-        phi4:14b)
-            echo "Cite 3 principes SOLID appliqués à une API REST Java. Réponse courte." ;;
+        nomic-embed-text-v2-moe)
+            echo "Stack LLM local sécurisée sur Apple Silicon M5 Max — Symfony Java K8s ELK" ;;
+        phi4-reasoning)
+            echo "Cite 3 principes SOLID appliqués à une API REST Java Spring Boot. Réponse courte." ;;
         codestral:22b)
             echo "Écris une fonction PHP qui sanitise une entrée utilisateur contre les injections SQL. Réponse courte." ;;
-        devstral:24b)
+        devstral-small-2)
             echo "Donne la structure Clean Architecture pour un projet Symfony avec un use case CreateUser. Réponse courte." ;;
         gemma4:31b|gemma4:31b-bf16)
             echo "Donne une requête KQL Kibana pour détecter des tentatives brute-force SSH dans les logs ELK." ;;
         llama3.3:70b)
             echo "Architecture K8s pour déployer une app Java Spring Boot haute disponibilité ? 3 points max." ;;
-        qwen2.5-coder:32b)
+        qwen3.6:35b|qwen3.6:27b)
             echo "Écris une fonction Python qui parse un fichier YAML de config Ansible. Réponse courte." ;;
         *)
             echo "Tu fonctionnes correctement ? Réponds en une phrase." ;;
@@ -152,25 +150,21 @@ print(f'Vecteur {len(v)} dimensions — min={min(v):.4f} max={max(v):.4f}')
     fi
 }
 
-# ── Test sandbox qwen2.5-coder:32b (port 11435) ─────────────
-run_sandbox_test() {
-    local model="qwen2.5-coder:32b"
-    local prompt size available start duration output
+# ── Test modèle Alibaba (avec filtre sandbox-guard.sh) ──────
+run_qwen_test() {
+    local model="$1"
+    local prompt size available needed start duration output
 
     prompt=$(model_prompt "$model")
     size=$(model_size "$model")
 
-    echo -e "\n${CYAN}┌── $model (SANDBOX port 11435) ─────────────────────${RESET}"
-    echo -e "${CYAN}│  Prompt : $prompt${RESET}"
-    echo -e "${CYAN}└────────────────────────────────────────────────────${RESET}\n"
-
-    log "\n---\n## $model (sandbox)\n"
-    log "**Port** : 11435 | **Date** : $(date '+%Y-%m-%d %H:%M:%S')"
+    log "\n---\n## $model (⚠ Alibaba — filtré via sandbox-guard.sh)\n"
+    log "**Date** : $(date '+%Y-%m-%d %H:%M:%S')"
     log "\n**Prompt** : \`$prompt\`\n"
 
-    if ! curl -sf http://127.0.0.1:11435/api/tags &>/dev/null; then
-        echo -e "  ${RED}✗ Sandbox non accessible sur port 11435 — make sandbox-setup${RESET}"
-        log "\n**Statut** : ❌ Sandbox non démarré\n"
+    if ! check_model_installed "$model"; then
+        log "\n> ⚠ Non installé — \`ollama pull $model\`\n"
+        echo -e "  ${YELLOW}⚠ $model non installé — ignoré${RESET}"
         return
     fi
 
@@ -182,16 +176,20 @@ run_sandbox_test() {
         return
     fi
 
+    echo -e "\n${CYAN}┌── $model (⚠ Alibaba 🇨🇳 — sandbox-guard.sh actif) ─${RESET}"
+    echo -e "${CYAN}│  Prompt : $prompt${RESET}"
+    echo -e "${CYAN}└────────────────────────────────────────────────────${RESET}\n"
+
     start=$SECONDS
-    output=$(OLLAMA_HOST=127.0.0.1:11435 ollama run "$model" "$prompt" 2>/dev/null \
+    output=$(ollama run "$model" "$prompt" 2>/dev/null \
         | bash "$(dirname "$0")/sandbox-guard.sh" 2>/dev/null || echo "ERREUR")
     duration=$(( SECONDS - start ))
 
     if [ "$output" = "ERREUR" ]; then
-        echo -e "${RED}✗ Erreur sandbox${RESET}"
+        echo -e "${RED}✗ Erreur${RESET}"
         log "\n**Statut** : ❌ ÉCHEC | **Durée** : ${duration}s\n"
     else
-        echo -e "${GREEN}✓ Réponse sandbox reçue en ${duration}s${RESET}\n"
+        echo -e "${GREEN}✓ Réponse reçue en ${duration}s (filtrée)${RESET}\n"
         echo "$output"
         log "\n**Réponse** :\n\`\`\`\n$output\n\`\`\`\n"
         log "**Durée** : ${duration}s | **Statut** : ✅ OK\n"
@@ -214,22 +212,29 @@ echo -e "${CYAN}║     Rapport : tests/results/                         ║${RE
 echo -e "${CYAN}╚══════════════════════════════════════════════════════╝${RESET}"
 
 if [ -n "$MODEL_ARG" ]; then
-    if [ "$MODEL_ARG" = "qwen2.5-coder:32b" ]; then
-        run_sandbox_test
-    else
-        stop_all_models
-        run_test "$MODEL_ARG"
-    fi
+    stop_all_models
+    case "$MODEL_ARG" in
+        qwen*)
+            run_qwen_test "$MODEL_ARG"
+            ;;
+        *)
+            run_test "$MODEL_ARG"
+            ;;
+    esac
 else
     for model in $MODELS; do
         stop_all_models
-        run_test "$model"
+        case "$model" in
+            qwen*)
+                run_qwen_test "$model"
+                ;;
+            *)
+                run_test "$model"
+                ;;
+        esac
         echo -e "\n${CYAN}── Pause 3s ────────────────────────────────────────${RESET}"
         sleep 3
     done
-    # Test sandbox en dernier
-    echo -e "\n${CYAN}── Sandbox qwen2.5-coder:32b ───────────────────────${RESET}"
-    run_sandbox_test
 fi
 
 echo -e "\n${GREEN}╔══════════════════════════════════════════════════════╗${RESET}"

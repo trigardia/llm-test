@@ -84,30 +84,30 @@ Quitter les logs : `Ctrl+C`
 
 | Commande | Modèles téléchargés | Taille approx. |
 |----------|---------------------|----------------|
-| `make models-light` | nomic-embed-text · llama3.1:8b | ~18 Go |
-| `make models` | + codestral:22b · phi4:14b · gemma4:31b · devstral:24b | ~60 Go |
+| `make models-light` | nomic-embed-text · phi4-reasoning | ~18 Go |
+| `make models` | + codestral:22b · phi4-reasoning · gemma4:31b · devstral-small-2 | ~60 Go |
 | `make models-all` | + llama3.3:70b | ~103 Go |
 
 **Recommandation** : commencer par `make models-light` pour tester le setup, puis `make models` pour le stack complet.
 
 ---
 
-## Kimi K2.6 — Sandbox sécurisé
+## qwen3.6:35b — Sandbox sécurisé
 
-### `make kimi-setup`
-Crée le réseau Docker isolé `kimi-sandbox` et démarre le container Kimi sur le port **11435**.
+### `make qwen-pull`
+Crée le réseau Docker isolé `sandbox-net` et démarre le container Kimi sur le port **11435**.
 
 ```bash
-make kimi-setup
-# Vérifie : réseau kimi-sandbox créé
-# Vérifie : container ollama-kimi actif
-# Rend kimi-guard.sh exécutable
+make qwen-pull
+# Vérifie : réseau sandbox-net créé
+# Vérifie : container ollama-sandbox actif
+# Rend sandbox-guard.sh exécutable
 ```
 
-### `make kimi-stop`
+### `ollama rm qwen3.6:35b`
 Arrête et supprime le container Kimi. Le réseau sandbox reste.
 
-### `make kimi-status`
+### `ollama list`
 Affiche l'état du container Kimi (nom, statut, port).
 
 ---
@@ -146,7 +146,7 @@ Rapport sécurité + performance en snapshot :
 |-------------|--------|
 | Ports réseau | Vérifie que tous les ports sont sur `127.0.0.1` |
 | Containers privileged | Aucun container ne doit être en mode privileged |
-| Isolation Kimi | Kimi doit être sur `kimi-sandbox` uniquement |
+| Isolation Kimi | Kimi doit être sur `sandbox-net` uniquement |
 | Fichier `.env` | Ne doit pas apparaître dans git |
 | Processus suspects | Connexions sortantes inattendues |
 | Charge CPU | Alerte si load > 80% des cœurs |

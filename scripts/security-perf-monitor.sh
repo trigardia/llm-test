@@ -51,17 +51,16 @@ check_docker_security() {
         echo -e "  ${PASS} Aucun container en mode privileged"
     fi
 
-    # Kimi isolé sur son réseau
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "ollama-kimi"; then
-        local kimi_networks
-        kimi_networks=$(docker inspect ollama-kimi --format '{{range $k,$v := .NetworkSettings.Networks}}{{$k}} {{end}}' 2>/dev/null)
-        if echo "$kimi_networks" | grep -q "kimi-sandbox"; then
-            echo -e "  ${PASS} Kimi K2.6 isolé sur kimi-sandbox"
-        else
-            echo -e "  ${FAIL} ${RED}Kimi K2.6 pas sur kimi-sandbox !${RESET}"
-        fi
+    # Vérifier qu'aucun container sandbox Ollama ne tourne (architecture supprimée)
+    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "ollama-sandbox"; then
+        echo -e "  ${WARN}  Container ollama-sandbox détecté — architecture sandbox Docker supprimée, vérifier"
     else
-        echo -e "  ${WARN}  Kimi K2.6 non démarré"
+        echo -e "  ${PASS} Pas de container sandbox Ollama résiduel"
+    fi
+
+    # Vérifier que qwen3.6:35b est bien présent localement (pas cloud)
+    if ollama list 2>/dev/null | grep -q "qwen3.6"; then
+        echo -e "  ${PASS} qwen3.6 — modèle local confirmé (pas cloud)"
     fi
 
     # Vérifier .env non exposé
@@ -144,15 +143,6 @@ check_ollama_latency() {
         echo -e "  Réponse API        : ${color}${latency}ms${RESET}"
     } || echo -e "  ${FAIL} Ollama ne répond pas sur localhost:11434"
 
-    # Kimi sandbox
-    if docker ps --format '{{.Names}}' 2>/dev/null | grep -q "ollama-kimi"; then
-        start=$(date +%s%N)
-        curl -s http://localhost:11435/api/tags -o /dev/null --max-time 3 2>/dev/null && {
-            end=$(date +%s%N)
-            latency=$(( (end - start) / 1000000 ))
-            echo -e "  Réponse Kimi (11435): ${latency}ms"
-        } || echo -e "  ${WARN}  Kimi sandbox ne répond pas"
-    fi
 }
 
 check_docker_perf() {

@@ -1,7 +1,6 @@
 .PHONY: help start stop restart status logs logs-webui logs-search update \
-        models models-light models-all clean \
+        models models-light models-all qwen-pull clean \
         load unload switch \
-        sandbox-setup sandbox-stop sandbox-status \
         test test-model monitor monitor-live security security-live \
         check-ram models-list models-check-new ollama-check stop-all
 
@@ -32,7 +31,7 @@ start: ## Démarrer Ollama + interfaces Docker
 ollama-check: ## Vérifier qu'Ollama est démarré (et le démarrer si besoin)
 	@pgrep -x ollama > /dev/null 2>&1 \
 		&& echo "$(GREEN)✓ Ollama actif$(RESET)" \
-		|| (echo "$(YELLOW)Ollama non démarré — démarrage...$(RESET)" && ollama serve &>/dev/null & sleep 3 && echo "$(GREEN)✓ Ollama démarré$(RESET)")
+		|| (echo "$(CYAN)Ollama non démarré — démarrage...$(RESET)" && ollama serve &>/dev/null & sleep 3 && echo "$(GREEN)✓ Ollama démarré$(RESET)")
 
 stop: ## Arrêter les interfaces Docker (Ollama continue en arrière-plan)
 	@echo "$(CYAN)Arrêt des interfaces Docker...$(RESET)"
@@ -54,27 +53,27 @@ status: ## Statut complet — Ollama + modèles + Docker
 	@echo "\n$(CYAN)── Ollama ──────────────────────────────$(RESET)"
 	@pgrep -x ollama > /dev/null 2>&1 && echo "$(GREEN)✓ Ollama actif$(RESET)" || echo "$(RED)✗ Ollama non démarré — make ollama-check$(RESET)"
 	@echo "\n$(CYAN)── Modèles en mémoire (RAM) ────────────$(RESET)"
-	@ollama ps 2>/dev/null || echo "  $(YELLOW)Aucun modèle chargé$(RESET)"
+	@ollama ps 2>/dev/null || echo "  Aucun modèle chargé"
 	@echo "\n$(CYAN)── Modèles installés (disque) ──────────$(RESET)"
 	@ollama list 2>/dev/null | awk 'NR==1 {printf "  %-35s %-15s %-10s %s\n", $$1, $$3" "$$4, $$5, $$6} NR>1 {printf "  %-35s %-15s %-10s %s\n", $$1, $$3" "$$4, $$5, $$6}' || echo "  $(RED)Ollama non démarré$(RESET)"
 	@echo "\n$(CYAN)── Interfaces Docker ───────────────────$(RESET)"
-	@cd $(DOCKER_DIR) && docker compose ps 2>/dev/null || echo "  $(YELLOW)Docker non démarré$(RESET)"
+	@cd $(DOCKER_DIR) && docker compose ps 2>/dev/null || echo "  Docker non démarré"
 
 models-list: ## Liste détaillée des modèles : nom · taille disque · RAM · statut
 	@echo "\n$(CYAN)╔══════════════════════════════════════════════════════════════╗$(RESET)"
 	@echo "$(CYAN)║              Modèles Ollama — Vue complète                   ║$(RESET)"
 	@echo "$(CYAN)╚══════════════════════════════════════════════════════════════╝$(RESET)"
 	@pgrep -x ollama > /dev/null 2>&1 || (echo "$(RED)✗ Ollama non démarré — lancez : make ollama-check$(RESET)" && exit 1)
-	@echo "\n$(BOLD)Installés sur disque :$(RESET)"
+	@echo "\nInstallés sur disque :"
 	@ollama list 2>/dev/null | awk 'NR==1 {next} {printf "  %-30s %8s\n", $$1, $$3" "$$4}' | sort
-	@echo "\n$(BOLD)Chargés en RAM :$(RESET)"
+	@echo "\nChargés en RAM :"
 	@loaded=$$(ollama ps 2>/dev/null | tail -n +2 | grep -v "^$$"); \
 	  if [ -z "$$loaded" ]; then \
-	    echo "  $(YELLOW)Aucun modèle en mémoire$(RESET)"; \
+	    echo "  Aucun modèle en mémoire"; \
 	  else \
 	    echo "$$loaded" | awk '{printf "  $(GREEN)●$(RESET)  %-30s %8s    RAM: %s\n", $$1, $$3" "$$4, $$5" "$$6}'; \
 	  fi
-	@echo "\n$(BOLD)Espace disque modèles :$(RESET)"
+	@echo "\nEspace disque modèles :"
 	@du -sh ~/.ollama/models 2>/dev/null | awk '{printf "  Total occupé : %s\n", $$1}'
 	@df -h / | awk 'NR==2 {printf "  Disque libre : %s sur %s\n", $$4, $$2}'
 	@echo ""
@@ -90,77 +89,45 @@ logs-search: ## Logs SearXNG uniquement
 	@cd $(DOCKER_DIR) && docker compose logs -f searxng
 
 ##@ Modèles
-models-light: ## Télécharger les modèles légers (rapide, ~18 GB)
+models-light: ## Télécharger les modèles légers (~10 GB)
 	@echo "$(CYAN)Vérification RAM...$(RESET)"
-	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-light" 18
+	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-light" 10
 	@echo "$(CYAN)Téléchargement des modèles légers...$(RESET)"
-	ollama pull nomic-embed-text
-	ollama pull llama3.1:8b
+	ollama pull nomic-embed-text-v2-moe
+	ollama pull phi4-reasoning
 	@echo "$(GREEN)✓ Modèles légers installés$(RESET)"
 
-models: ## Télécharger les modèles standards (~60 GB)
+models: ## Télécharger les modèles standards (~70 GB)
 	@echo "$(CYAN)Vérification RAM...$(RESET)"
-	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-standard" 60
+	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-standard" 70
 	@echo "$(CYAN)Téléchargement des modèles standards...$(RESET)"
-	ollama pull nomic-embed-text
-	ollama pull llama3.1:8b
+	ollama pull nomic-embed-text-v2-moe
+	ollama pull phi4-reasoning
 	ollama pull codestral:22b
-	ollama pull phi4:14b
 	ollama pull gemma4:31b
-	ollama pull devstral:24b
+	ollama pull devstral-small-2
 	@echo "$(GREEN)✓ Modèles standards installés$(RESET)"
 
-models-all: ## Télécharger TOUS les modèles (~103 GB)
+models-all: ## Télécharger TOUS les modèles (~160 GB)
 	@echo "$(CYAN)Vérification RAM...$(RESET)"
-	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-all" 103
+	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-all" 160
 	@echo "$(CYAN)Téléchargement de tous les modèles (long)...$(RESET)"
-	ollama pull nomic-embed-text
-	ollama pull llama3.1:8b
+	ollama pull nomic-embed-text-v2-moe
+	ollama pull phi4-reasoning
 	ollama pull codestral:22b
-	ollama pull phi4:14b
 	ollama pull gemma4:31b
-	ollama pull devstral:24b
+	ollama pull devstral-small-2
 	ollama pull llama3.3:70b
+	ollama pull qwen3.6:35b
 	@echo "$(GREEN)✓ Tous les modèles installés$(RESET)"
 
-##@ Sandbox qwen2.5-coder:32b (modèle chinois isolé)
-sandbox-setup: ## Créer le sandbox Docker et télécharger qwen2.5-coder:32b
-	@echo "$(CYAN)Création du réseau sandbox isolé inter-containers...$(RESET)"
-	@docker network create --driver bridge --internal sandbox-net 2>/dev/null || echo "  Réseau sandbox-net déjà existant"
-	@docker volume create qwen-models 2>/dev/null || echo "  Volume qwen-models déjà existant"
-	@echo "$(CYAN)Démarrage du container sandbox...$(RESET)"
-	@docker rm -f ollama-sandbox 2>/dev/null || true
-	docker run -d --name ollama-sandbox \
-		--network sandbox-net \
-		--cap-drop ALL --read-only \
-		--tmpfs /tmp:size=512m \
-		-v qwen-models:/root/.ollama \
-		-v $$(pwd):/workspace:ro \
-		--memory="25g" --cpus="12" \
-		-p 127.0.0.1:11435:11434 ollama/ollama
-	@echo "$(CYAN)Attente démarrage Ollama dans le container...$(RESET)"
-	@sleep 8
-	@echo "$(CYAN)Connexion temporaire internet pour le téléchargement...$(RESET)"
-	@docker network connect bridge ollama-sandbox
-	@echo "$(CYAN)Téléchargement de qwen2.5-coder:32b...$(RESET)"
-	OLLAMA_HOST=127.0.0.1:11435 ollama pull qwen2.5-coder:32b
-	@echo "$(CYAN)Isolation inter-containers — déconnexion bridge...$(RESET)"
-	@docker network disconnect bridge ollama-sandbox
+qwen-pull: ## Télécharger qwen3.6:35b (⚠ modèle Alibaba — sortie via sandbox-guard.sh)
+	@echo "$(CYAN)Téléchargement de qwen3.6:35b...$(RESET)"
+	@bash $(SCRIPTS_DIR)/check-resources.sh "qwen3.6:35b" 24
+	ollama pull qwen3.6:35b
 	@chmod +x $(SCRIPTS_DIR)/sandbox-guard.sh
-	@echo "$(GREEN)✓ Sandbox prêt — qwen2.5-coder:32b sur port 11435$(RESET)"
-	@echo "$(YELLOW)  Note : port mapping actif via sandbox-net (isolation inter-containers garantie)$(RESET)"
-
-sandbox-stop: ## Arrêter le sandbox
-	@docker stop ollama-sandbox 2>/dev/null && docker rm ollama-sandbox 2>/dev/null || true
-	@echo "$(GREEN)✓ Sandbox arrêté$(RESET)"
-
-sandbox-status: ## Statut et isolation du sandbox
-	@echo "\n$(CYAN)── Container sandbox ─────────────────────────$(RESET)"
-	@docker ps --filter name=ollama-sandbox --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" 2>/dev/null || echo "  Non démarré"
-	@echo "\n$(CYAN)── Réseaux connectés ─────────────────────────$(RESET)"
-	@docker inspect ollama-sandbox --format '{{range $$k,$$v := .NetworkSettings.Networks}}  ● {{$$k}}\n{{end}}' 2>/dev/null || true
-	@echo "\n$(CYAN)── Modèles dans le sandbox ───────────────────$(RESET)"
-	@OLLAMA_HOST=127.0.0.1:11435 ollama list 2>/dev/null || echo "  Sandbox non accessible"
+	@echo "$(GREEN)✓ qwen3.6:35b installé$(RESET)"
+	@echo "$(RED)⚠ Usage obligatoire : ollama run qwen3.6:35b \"prompt\" | ./scripts/sandbox-guard.sh$(RESET)"
 
 ##@ Gestion RAM — chargement à la demande
 load: ## Charger un modèle en RAM (usage: make load MODEL=gemma4:31b)
@@ -175,7 +142,7 @@ unload: ## Décharger tous les modèles de la RAM (libère la mémoire)
 	@bash $(SCRIPTS_DIR)/load-model.sh --unload
 
 ##@ Tests
-test: ## Tester tous les modèles un par un (Kimi exclu) — rapport généré dans tests/results/
+test: ## Tester tous les modèles un par un — rapport généré dans tests/results/
 	@bash $(SCRIPTS_DIR)/test-models.sh
 
 test-model: ## Tester un seul modèle (usage: make test-model MODEL=codestral:22b)

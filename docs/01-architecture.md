@@ -10,8 +10,8 @@
 │   │  OLLAMA — Port 11434                                │  │
 │   │  GPU M5 Max · Mémoire unifiée 128 Go                │  │
 │   │                                                     │  │
-│   │  codestral:22b · devstral:24b · llama3.3:70b       │  │
-│   │  llama3.1:8b · phi4:14b · gemma4:31b               │  │
+│   │  codestral:22b · devstral-small-2 · llama3.3:70b       │  │
+│   │  phi4-reasoning · phi4-reasoning · gemma4:31b               │  │
 │   │  nomic-embed-text                                   │  │
 │   └─────────────────────┬───────────────────────────────┘  │
 │                         │ API REST                          │
@@ -37,7 +37,7 @@
 │                                                             │
 │   ┌─────────────────────────────────┐                       │
 │   │  KIMI K2.6 — Port 11435        │                       │
-│   │  Réseau : kimi-sandbox (isolé) │                       │
+│   │  Réseau : sandbox-net (isolé) │                       │
 │   │  Sortie filtrée par kimi-guard │                       │
 │   └─────────────────────────────────┘                       │
 └─────────────────────────────────────────────────────────────┘
@@ -63,7 +63,7 @@ Isolation, reproductibilité, mise à jour facile (`docker compose pull`), aucun
 |--------|------|-------|
 | `llm-frontend` | bridge | Open WebUI ↔ localhost |
 | `llm-search` | bridge | Open WebUI ↔ SearXNG (interne) |
-| `kimi-sandbox` | bridge internal | Isolation totale Kimi |
+| `sandbox-net` | bridge internal | Isolation totale Kimi |
 
 ## Ports exposés
 

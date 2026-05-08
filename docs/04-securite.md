@@ -17,10 +17,10 @@ La sécurité est la **priorité absolue** de cette stack. Aucun compromis.
 | Niveau | Modèles | Règle |
 |--------|---------|-------|
 | ✅ Confiant | Mistral, Meta, Google, Microsoft | Usage libre |
-| ⚠️ Sandboxé | Kimi K2.6 | Docker isolé + kimi-guard.sh obligatoire |
+| ⚠️ Sandboxé | qwen3.6:35b | Docker isolé + sandbox-guard.sh obligatoire |
 | ❌ Exclu | Qwen, DeepSeek, modèles chinois non sandboxés | Interdit |
 
-### 3. Données interdites avec Kimi K2.6
+### 3. Données interdites avec qwen3.6:35b
 - Secrets, tokens, credentials
 - Code propriétaire
 - Chemins hors dossier de travail
@@ -28,12 +28,12 @@ La sécurité est la **priorité absolue** de cette stack. Aucun compromis.
 
 ---
 
-## Protocole Kimi K2.6
+## Protocole qwen3.6:35b
 
 ```
-Prompt → Kimi K2.6 (port 11435)
+Prompt → qwen3.6:35b (port 11435)
               ↓
-        kimi-guard.sh          ← filtre automatique
+        sandbox-guard.sh          ← filtre automatique
               ↓
     Validation Llama 3.3 70B  ← 2ème avis
               ↓
@@ -45,7 +45,7 @@ Prompt → Kimi K2.6 (port 11435)
 Utilisation :
 
 ```bash
-OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "question" | ./scripts/kimi-guard.sh
+ollama run qwen3.6:35b "question" | ./scripts/sandbox-guard.sh
 ```
 
 ---
@@ -68,7 +68,7 @@ OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "question" | ./scripts/kimi-gua
 ```
 llm-frontend  →  Open WebUI ↔ localhost
 llm-search    →  Open WebUI ↔ SearXNG (interne)
-kimi-sandbox  →  Kimi isolé (--internal)
+sandbox-net  →  Kimi isolé (--internal)
 ```
 
 ---
@@ -94,6 +94,6 @@ Avant chaque mise en production :
 - [ ] Ports vérifiés sur `127.0.0.1` uniquement
 - [ ] `ENABLE_SIGNUP=false` dans Open WebUI
 - [ ] `WEBUI_AUTH=true` dans Open WebUI
-- [ ] Kimi K2.6 uniquement sur port 11435
-- [ ] `kimi-guard.sh` exécutable (`chmod +x`)
+- [ ] qwen3.6:35b uniquement sur port 11435
+- [ ] `sandbox-guard.sh` exécutable (`chmod +x`)
 - [ ] Aucun modèle exclu installé (`ollama list`)

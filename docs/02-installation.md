@@ -87,14 +87,14 @@ Voir [03-modeles.md](03-modeles.md) pour l'ordre recommandé et les commandes.
 
 ---
 
-## Étape 7 — Sandbox Kimi K2.6 (optionnel)
+## Étape 7 — Sandbox qwen3.6:35b (optionnel)
 
 ```bash
 # Créer le réseau isolé
-docker network create --driver bridge --internal kimi-sandbox
+docker network create --driver bridge --internal sandbox-net
 
 # Démarrer le container Kimi
-docker run -d --name ollama-kimi --network kimi-sandbox \
+docker run -d --name ollama-sandbox --network sandbox-net \
   --cap-drop ALL --read-only \
   --tmpfs /tmp:size=512m --tmpfs /root/.ollama:size=100g \
   -v $(pwd):/workspace:ro \
@@ -102,7 +102,7 @@ docker run -d --name ollama-kimi --network kimi-sandbox \
   -p 127.0.0.1:11435:11434 ollama/ollama
 
 # Rendre le guard exécutable
-chmod +x scripts/kimi-guard.sh
+chmod +x scripts/sandbox-guard.sh
 ```
 
 ---

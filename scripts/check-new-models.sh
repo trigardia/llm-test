@@ -10,13 +10,12 @@ CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 # Modèles déjà retenus dans le projet (à comparer)
 KNOWN_MODELS=(
     "codestral:22b"
-    "devstral:24b"
+    "devstral-small-2"
     "llama3.3:70b"
-    "llama3.1:8b"
-    "phi4:14b"
+    "phi4-reasoning"
     "gemma4:31b"
-    "kimi-k2.6"
-    "nomic-embed-text"
+    "qwen3.6:35b"
+    "nomic-embed-text-v2-moe"
 )
 
 # Tags de pertinence pour ce projet
