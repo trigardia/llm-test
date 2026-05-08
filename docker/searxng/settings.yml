@@ -1,0 +1,75 @@
+# SearXNG configuration — sécurisée pour usage local uniquement
+use_default_settings: true
+
+general:
+  debug: false
+  instance_title: "LLM Search"
+  privacypolicy_url: false
+  donation_url: false
+  contact_url: false
+  enable_metrics: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  default_lang: "fr"
+  max_ban_time_on_fail: 5
+  ban_time_on_fail: 5
+
+server:
+  secret_key: "${SEARXNG_SECRET_KEY}"
+  limiter: false        # Désactivé car usage local uniquement
+  image_proxy: false
+  http_protocol_version: "1.1"
+  method: "GET"
+
+ui:
+  static_use_hash: true
+  default_locale: "fr"
+  query_in_title: false
+  infinite_scroll: false
+  center_alignment: false
+  default_theme: simple
+  theme_args:
+    simple_style: dark
+
+# Format JSON activé pour l'API (requis par Open WebUI)
+search:
+  formats:
+    - html
+    - json
+
+outgoing:
+  request_timeout: 10.0
+  max_request_timeout: 15.0
+  useragent_suffix: ""
+  pool_connections: 100
+  pool_maxsize: 20
+  enable_http2: true
+
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+    disabled: false
+
+  - name: bing
+    engine: bing
+    shortcut: b
+    disabled: false
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: d
+    disabled: false
+
+  - name: wikipedia
+    engine: wikipedia
+    shortcut: w
+    disabled: false
+    language: fr
+
+  - name: github
+    engine: github
+    shortcut: gh
+    disabled: false

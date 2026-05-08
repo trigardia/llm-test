@@ -1,0 +1,88 @@
+services:
+
+  # ============================================================
+  # OPEN WEBUI — Interface principale (ChatGPT-like)
+  # Accessible : http://localhost:3000
+  # ============================================================
+  open-webui:
+    image: ghcr.io/open-webui/open-webui:main
+    container_name: open-webui
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3000:8080"       # Localhost uniquement — jamais exposé réseau
+    environment:
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL}
+      - WEBUI_SECRET_KEY=${WEBUI_SECRET_KEY}
+      - WEBUI_AUTH=true              # Authentification obligatoire
+      - ENABLE_SIGNUP=false          # Pas d'inscription publique
+      - SEARXNG_QUERY_URL=http://searxng:8080/search?q=<query>&format=json
+      - ENABLE_RAG_WEB_SEARCH=true
+      - RAG_WEB_SEARCH_ENGINE=searxng
+    volumes:
+      - open-webui-data:/app/backend/data
+    networks:
+      - llm-frontend
+      - llm-search
+    depends_on:
+      searxng:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 1g
+    cpus: "2"
+
+  # ============================================================
+  # SEARXNG — Moteur de recherche privé (API pour Open WebUI)
+  # Non exposé directement — accessible uniquement via open-webui
+  # ============================================================
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    restart: unless-stopped
+    # PAS de ports exposés — accessible uniquement depuis open-webui
+    environment:
+      - SEARXNG_SECRET_KEY=${SEARXNG_SECRET_KEY}
+      - SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml
+    volumes:
+      - ./searxng/settings.yml:/etc/searxng/settings.yml:ro   # Read-only
+    networks:
+      - llm-search                   # Réseau isolé, pas d'accès internet direct au container
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - SETGID
+      - SETUID
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m
+      - /run:size=32m
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+    mem_limit: 512m
+    cpus: "1"
+
+# ============================================================
+# VOLUMES persistants
+# ============================================================
+volumes:
+  open-webui-data:
+    driver: local
+
+# ============================================================
+# RÉSEAUX isolés
+# llm-frontend : open-webui ↔ monde extérieur (localhost)
+# llm-search   : open-webui ↔ searxng (interne uniquement)
+# ============================================================
+networks:
+  llm-frontend:
+    driver: bridge
+  llm-search:
+    driver: bridge
+    internal: false                  # SearXNG a besoin d'accès internet pour chercher
