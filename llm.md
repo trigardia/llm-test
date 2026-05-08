@@ -1,391 +1,385 @@
 # LLMs Locaux — Stack Dev + Sécurité
-> MacBook Pro M5 Max 128 Go · Symfony · JavaScript · Python · Node.js · Bash · React · Pentest
+> MacBook Pro M5 Max 128 Go · Symfony · JavaScript · Python · Java · Bash · K8s · ELK · Pentest  
+> Dernière mise à jour : 2026-05-08 — benchmarks réels mesurés
 
 ---
 
-## Principes de sélection
+## Question fondamentale : LLM local ou Claude Code ?
 
-### Sécurité des modèles
-| Niveau | Origine | Statut |
-|--------|---------|--------|
-| ✅ Confiant | USA / Europe — gouvernance claire, audités | Retenu |
-| ⚠️ Sandboxé | Chine — puissant mais guardrails faibles — sandbox obligatoire | Retenu avec restrictions |
-| ❌ Éviter | Origine inconnue | Exclu |
+**Réponse honnête : Claude Code est meilleur pour le code.**
 
-### Critères qualité code imposés
-Tous les modèles retenus doivent être capables de respecter :
-- **Clean Architecture** — séparation claire des couches (Domain, Application, Infrastructure)
-- **Scalabilité** — code qui tient la charge
-- **Adaptabilité** — interfaces stables, implémentations interchangeables
-- **Évolutivité** — SOLID, DDD, patterns extensibles
-- **Maintenabilité** — lisibilité, conventions, tests
+Avant d'investir du temps dans un stack LLM local, comprendre la différence :
+
+| Critère | Claude Code (Anthropic) | LLM local (Ollama) |
+|---|---|---|
+| Qualité code | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ (meilleur : devstral A-) |
+| Contexte projet | ✅ Lit tous les fichiers, git, terminal | ❌ Prompt uniquement |
+| Vitesse | Secondes | 39s à 663s par réponse |
+| Confidentialité | ❌ Code envoyé à Anthropic | ✅ Rien ne quitte la machine |
+| Coût | ~100€/mois | Électricité + amortissement machine |
+| Setup | Zero | Installation, RAM, modèles |
+| Quota | Limité | Illimité |
+
+### Quand utiliser les LLMs locaux
+
+**Seul vrai cas d'usage : code confidentiel qui ne peut pas quitter la machine.**
+
+- Code client sous NDA
+- Credentials, secrets, tokens dans le contexte
+- Architecture propriétaire sensible
+- Code soumis à des contraintes de souveraineté des données
+
+Pour tout le reste (architecture, refactoring, debugging, génération) : **utilise Claude Code**, il est plus rapide, meilleur, et ne nécessite aucune maintenance.
+
+### Autres usages secondaires légitimes
+
+- **Veille et expérimentation** — comparer comment les modèles résolvent un problème
+- **Open WebUI** — interface locale pour des collègues sans accès Claude
+- **Scripts CI sans quota** — tâches répétitives simples (docblocks, formatage)
+- **RAG sur codebase confidentielle** — via nomic-embed-text-v2-moe + Open WebUI
+
+---
+
+## Benchmark réel — 2026-05-08
+
+Mission : microservice Symfony 7 fintech, 6 behaviors experts (DDD, SOLID, Sécurité OWASP 2026, Performance, Tests TDD, Observabilité OpenTelemetry). Machine : M5 Max 128 Go, isolation RAM garantie (un seul modèle à la fois).
+
+### Résultats mesurés
+
+| Modèle | DDD | SOLID | Sécu | Perf | Tests | OTel | **Score** | Durée | Lignes |
+|---|---|---|---|---|---|---|---|---|---|
+| `devstral-small-2` | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ | **A-** | 292s | ~1 200 |
+| `qwen3.6:27b` ⚠ | ✅ | ✅ | ✅ | ✅ | ⚠ | ✅ | **A-** | 557s | ~700 |
+| `gemma4:31b` | ✅ | ✅ | ❌ | ✅ | ⚠ | ✅ | **B+** | 201s | ~460 |
+| `phi4-reasoning:plus` | ✅ | ✅ | ⚠ | ⚠ | ⚠ | ✅ | **B** | 663s | ~1 070 |
+| `codestral:22b` | ✅ | ✅ | ❌ | ⚠ | ❌ | ❌ | **C+** | 39s | ~50 |
+| `llama3.3:70b` | ⚠ | ⚠ | ❌ | ❌ | ⚠ | ⚠ | **C** | 284s | ~560 |
+
+> Analyse complète : `tests/analysis/benchmark-2026-05-08-round1.md`
+
+### Enseignement clé
+
+> **La spécialisation SWE-bench bat la taille des paramètres.**  
+> devstral-small-2 (15B) > llama3.3:70b (70B) sur toute la grille.  
+> La sécurité est le behavior le plus discriminant — seuls 2 modèles sur 6 l'implémentent correctement.
 
 ---
 
 ## Stack des modèles retenus
 
-### Modèle 1 — Codestral 22B · Mistral AI (France) 🇫🇷
-> Coding quotidien — PHP/Symfony · JS · Python · Bash · React
+### Règle de sécurité des origines
 
-```bash
-ollama pull codestral:22b
-```
-
-| Attribut | Valeur |
-|----------|--------|
-| Origine | Mistral AI — France (EU AI Act compliant) |
-| Taille | ~13 Go (Q4) / ~22 Go (Q8) |
-| RAM utilisée | ~22 Go à Q8 — laisse 106 Go libres |
-| Langages | 80+ dont PHP, JS, Python, Bash, TypeScript |
-| Spécialité | Complétion de code, fill-in-the-middle, refactoring |
-
-**Pourquoi pour ton stack :**
-- Meilleur modèle open source pour **PHP/Symfony** — surpasse CodeLlama 70B sur PHP
-- Excellent sur **React/Node.js/TypeScript**
-- Rapide : réponses en < 2s sur M5 Max
-- Connaît les patterns Symfony (Repository, Service Layer, Event Dispatcher)
-
-```bash
-ollama run codestral:22b
-```
+| Niveau | Origine | Règle |
+|---|---|---|
+| ✅ Confiant | Mistral 🇫🇷, Meta 🇺🇸, Google 🇺🇸, Microsoft 🇺🇸, Nomic 🇺🇸 | Usage libre port 11434 |
+| ⚠ Filtré | Alibaba 🇨🇳 — qwen3.6:27b | Sortie obligatoirement via `sandbox-guard.sh` |
+| ❌ Exclu | DeepSeek, modèles cloud chinois non locaux | Ne jamais installer |
 
 ---
 
-### Modèle 2 — Devstral 24B · Mistral AI (France) 🇫🇷
-> Agentic coding — édition multi-fichiers · refactoring de projet entier
-
-```bash
-ollama pull devstral-small-2
-```
+### devstral-small-2 · Mistral AI 🇫🇷
+> **Missions autonomes multi-fichiers — le meilleur du stack**
 
 | Attribut | Valeur |
-|----------|--------|
-| Origine | Mistral AI — France |
-| Taille | ~14 Go (Q4) / ~22 Go (Q8) |
-| RAM utilisée | ~22 Go à Q8 |
-| Spécialité | Multi-fichiers, workflows agents, navigation de codebase |
+|---|---|
+| Taille disque | ~15 Go |
+| RAM chargé | ~30 Go |
+| Score benchmark | **A- (6/6 behaviors)** |
+| SWE-bench | 65.8% |
+| Spécialité | Refactoring agentique, scaffolding complet, Ansible |
 
-**Pourquoi pour ton stack :**
-- Conçu pour les **agents de code** (comme Claude Code) — comprend la structure d'un projet entier
-- Idéal pour refactorer une **app Symfony** sur plusieurs fichiers simultanément
-- Respecte les conventions d'architecture : impose des séparations propres entre couches
+**Points forts mesurés :**
+- Seul modèle à couvrir spontanément les 6 behaviors en une passe
+- 1 200 lignes PHP incluant Domain + Application + Infrastructure + API + Tests
+- Sécurité JWT, rate limiting, HSTS/CSP implémentés sans rappel
+- `releaseEvents()` correct, circuit breaker 50ms, cursor pagination
+
+**Limites :**
+- 292s de génération par réponse longue
+- Bugs mineurs : NPE de précédence dans `ensureValidState()`, Outbox Pattern sans persistance DB
+
+**Usage recommandé :** génération de scaffolding complet, refactoring multi-fichiers, missions avec code confidentiel qu'on ne peut pas envoyer à Claude.
 
 ```bash
+make load MODEL=devstral-small-2
 ollama run devstral-small-2
 ```
 
 ---
 
-### Modèle 3 — Llama 3.3 70B · Meta (USA) 🇺🇸
-> Architecture · Revue de code · Raisonnement complexe · Pentest (analyse)
-
-```bash
-ollama pull llama3.3:70b-instruct-q5_K_M
-```
+### qwen3.6:27b · Alibaba 🇨🇳 ⚠
+> **Architecture DDD la plus avancée — filtre sandbox obligatoire**
 
 | Attribut | Valeur |
-|----------|--------|
-| Origine | Meta — USA |
-| Taille | ~48 Go à Q5_K_M |
-| RAM utilisée | ~48 Go — laisse 80 Go libres |
-| Benchmarks | 92.1% instruction-following |
-| Contexte | 128K tokens |
+|---|---|
+| Taille disque | ~17 Go |
+| RAM chargé | ~42 Go |
+| Score benchmark | **A- (5/6 behaviors)** |
+| Protocole obligatoire | `sandbox-guard.sh` sur toute sortie |
 
-**Pourquoi pour ton stack :**
-- Le meilleur modèle open source pour les décisions d'**architecture logicielle**
-- Comprend profondément **SOLID, DDD, Clean Architecture, Hexagonal**
-- **Revue de sécurité** : détecte les injections SQL, XSS, IDOR, mauvaises configs Symfony
-- Analyse de vulnérabilités OWASP Top 10 dans du code PHP/JS
-- Assez grand pour raisonner sur des patterns complexes et expliquer le POURQUOI
+**Points forts mesurés :**
+- Architecture DDD la plus sophistiquée : `TransactionId`/`TransactionStatus` comme VOs, `DomainEvent` base class
+- `hrtime(true)` nanoseconde, `SET NX EX` anti-stampede Redis
+- `$span->recordException()` + `SpanStatus::error()` — OTel le plus complet
+- Alerte PromQL documentée par le modèle lui-même
+- Sécurité via attributs Symfony (`#[IsGranted]`, `#[RateLimit]`) idiomatique
 
+**Limites :**
+- Filtre sandbox obligatoire — interdit sur secrets/code propriétaire
+- Bugs de type PHP : wildcard import `use Namespace\*` invalide, `releaseEvents()` type incorrect
+- 557s de génération
+
+**Protocole d'usage :**
 ```bash
-ollama run llama3.3:70b-instruct-q5_K_M
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
+# ou via make :
+make load MODEL=qwen3.6:27b
 ```
 
----
-
-### Modèle 4 — Llama 3.1 8B · Meta (USA) 🇺🇸
-> Pentest automatisé · Scanning de sécurité rapide · OASIS
-
-```bash
-ollama pull phi4-reasoning
-```
-
-| Attribut | Valeur |
-|----------|--------|
-| Origine | Meta — USA |
-| Taille | ~5 Go (Q4) |
-| RAM utilisée | ~5 Go — ultra léger |
-| Spécialité | Sécurité automatisée, scanning rapide, pipeline CI |
-
-**Pourquoi pour ton stack :**
-- Modèle recommandé par **OASIS** (Ollama Automated Security Intelligence Scanner)
-- Analyse de code en continu dans un pipeline CI/CD
-- Rapide : idéal pour scanner chaque commit avant merge
-- Combiné avec **Promptfoo** pour red-teaming automatisé
-
-```bash
-# Installer les outils de sécurité associés
-npm install -g promptfoo          # Red-teaming automatisé
-pip install oasis-security        # Scanner sécurité OWASP
-
-ollama run phi4-reasoning
-```
-
----
-
-### Modèle 5 — Phi-4 14B · Microsoft (USA) 🇺🇸
-> Raisonnement structuré · Architecture · Analyse de patterns
-
-```bash
-ollama pull phi4-reasoning
-```
-
-| Attribut | Valeur |
-|----------|--------|
-| Origine | Microsoft Research — USA |
-| Taille | ~9 Go (Q4) |
-| RAM utilisée | ~9 Go — très léger |
-| Spécialité | Raisonnement structuré, surpasse des modèles 30-70B sur l'analyse |
-
-**Pourquoi pour ton stack :**
-- Excellent pour valider des **choix d'architecture** (DDD vs CRUD, MVC vs Hexagonal)
-- Léger mais puissant : parfait pour une 2ème opinion rapide
-- Bon pour analyser si ton code Symfony respecte les **principes SOLID**
-
-```bash
-ollama run phi4-reasoning
-```
-
----
-
-### Modèle 6 — Gemma 3 27B · Google (USA) 🇺🇸
-> Tool-calling · Agents · Analyse de vulnérabilités automatisée
-
-```bash
-ollama pull gemma4:31b
-```
-
-| Attribut | Valeur |
-|----------|--------|
-| Origine | Google — USA (Apache 2.0) |
-| Taille | ~20 Go à Q8 |
-| RAM utilisée | ~20 Go |
-| Spécialité | Function calling, tool use, agents automatisés |
-
-**Pourquoi pour ton stack :**
-- Le meilleur pour construire des **agents de sécurité** qui appellent des outils (nmap, sqlmap, etc.)
-- Excellent pour les **workflows automatisés** de revue de code
-- Apache 2.0 — le plus permissif pour usage commercial
-
-```bash
-ollama run gemma4:31b
-```
-
----
-
----
-
-## Modèle 7 — qwen3.6:27b · Moonshot AI (Chine) 🇨🇳 ⚠️ Sandboxé
-> Meilleur coding open source — usage restreint au code non sensible
-
-```bash
-ollama pull qwen3.6:27b
-```
-
-| Attribut | Valeur |
-|----------|--------|
-| Origine | Moonshot AI — Chine (juridiction chinoise) |
-| Architecture | MoE — 32B actifs / ~1T total |
-| Taille | ~70-80 Go (Q4_K_M) |
-| RAM utilisée | ~75 Go — laisse 53 Go libres |
-| Licence | MIT modifié (libre pour usage interne) |
-| SWE-Bench | **80.2%** — #1 open source mondial |
-| Guardrails | **1.55%** — extrêmement faibles |
-
-### Pourquoi l'utiliser malgré les risques
-- **80.2% SWE-Bench** — surpasse Devstral (68%) et Llama 3.3 70B (~55%) sur le code réel
-- Local via Ollama = **zéro communication réseau** vers la Chine
-- Aucun backdoor technique trouvé par HiddenLayer et autres chercheurs
-- MoE : 32B actifs seulement — inférence rapide malgré 1T de paramètres
-
-### Ce qui est INTERDIT avec Kimi
-- ❌ Code contenant des tokens / clés API / secrets
+**Interdit avec qwen :**
+- ❌ Tokens, clés API, secrets
 - ❌ Code propriétaire ou confidentiel
 - ❌ Fichiers de configuration avec credentials
-- ❌ Accès à des dossiers hors du projet de travail
-- ❌ Exécution de commandes shell sans validation humaine
 
-### Sandbox Docker obligatoire pour Kimi
+---
 
-```bash
-# Créer le réseau isolé (pas d'accès internet)
-docker network create --internal sandbox-net
+### gemma4:31b · Google 🇺🇸
+> **Performance & Observabilité — OTel réel, perf maximale**
 
-# Lancer Ollama dans un container sandboxé
-docker run -d \
-  --name ollama-sandbox \
-  --network sandbox-net \
-  --cap-drop ALL \
-  --cap-add NET_BIND_SERVICE \
-  --read-only \
-  --tmpfs /tmp:size=512m \
-  --tmpfs /root/.ollama:size=100g \
-  -v $(pwd):/workspace:ro \
-  -e OLLAMA_HOST=127.0.0.1 \
-  -e OLLAMA_NO_PRUNE=1 \
-  --memory="90g" \
-  --cpus="16" \
-  -p 127.0.0.1:11435:11434 \
-  ollama/ollama
+| Attribut | Valeur |
+|---|---|
+| Taille disque | ~20 Go |
+| RAM chargé | ~47 Go |
+| Score benchmark | **B+ (4/6 behaviors)** |
+| Contexte | 256K tokens |
+| Spécialité | Agents, tool-calling, multimodal |
 
-# Charger Kimi dans le container
-docker exec ollama-sandbox ollama pull qwen3.6:27b
+**Points forts mesurés :**
+- Seul modèle à importer les vraies classes `OpenTelemetry\API\Trace\TracerInterface` et `Prometheus\CollectorRegistry`
+- `timeout: 0.05` HttpClient réel (50ms), circuit breaker, cursor pagination
+- `TTL_MAP` const Redis par RiskLevel, `SET NX EX` atomique
+- `$version` optimistic locking, `releaseEvents()` correct
+- `Idempotency-Key` (RFC 8615) enforced
 
-# Utiliser Kimi via le port dédié (11435 ≠ 11434 pour les autres modèles)
-ollama run qwen3.6:27b
-```
+**Limites :**
+- JWT commenté (`// $this->denyAccessUnlessGranted`) — sécurité absente ❌
+- Rate limiting absent
+- Tests : Domain OK, integration absente
 
-**Ce que le sandbox impose :**
-- `--network sandbox-net --internal` → pas d'accès internet
-- `-v $(pwd):/workspace:ro` → lecture seule, dossier courant uniquement
-- `--cap-drop ALL` → zéro privilege Linux
-- `--read-only` → système de fichiers container en lecture seule
-- Port **11435** séparé → Kimi isolé des autres modèles sur 11434
-
-### Hook de validation des sorties Kimi
-
-Créer `/Users/devsecops/projects/macbook/scripts/sandbox-guard.sh` :
+**Usage recommandé :** patterns de performance, observabilité production, code OTel/Prometheus de référence.
 
 ```bash
-#!/usr/bin/env bash
-# Intercepte et valide les sorties de Kimi avant usage
-
-BLOCKED_PATTERNS=(
-  "rm -rf"
-  "curl.*|.*bash"
-  "wget.*|.*bash"
-  "eval.*\$("
-  "base64.*decode"
-  "/etc/passwd"
-  "/etc/shadow"
-  "ssh-keygen"
-  "chmod 777"
-  "> /dev/null 2>&1 &"
-)
-
-INPUT=$(cat)
-
-for pattern in "${BLOCKED_PATTERNS[@]}"; do
-  if echo "$INPUT" | grep -qiE "$pattern"; then
-    echo "⚠️  KIMI GUARD: Pattern dangereux détecté → '$pattern'" >&2
-    echo "Sortie bloquée. Valider manuellement avant usage." >&2
-    exit 1
-  fi
-done
-
-# Validation Llama 3.3 70B (2ème avis sécurité)
-echo "✅ KIMI GUARD: Sortie validée — soumission à Llama 3.3 pour audit..."
-echo "$INPUT"
-```
-
-```bash
-chmod +x /Users/devsecops/projects/macbook/scripts/sandbox-guard.sh
-
-# Usage : toujours passer la sortie de Kimi dans le guard
-ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
-```
-
-### Workflow sécurisé avec Kimi
-
-```
-qwen3.6:27b (sandbox Docker)
-        ↓
-  sandbox-guard.sh (détection patterns dangereux)
-        ↓
-  Llama 3.3 70B (audit sécurité de la sortie)
-        ↓
-  Validation humaine obligatoire avant commit
+make load MODEL=gemma4:31b
 ```
 
 ---
 
-## Installation complète (dans l'ordre)
+### phi4-reasoning:plus · Microsoft 🇺🇸
+> **Raisonnement architectural — Chain-of-Thought visible**
+
+| Attribut | Valeur |
+|---|---|
+| Taille disque | ~9 Go |
+| RAM chargé | ~20 Go |
+| Score benchmark | **B (3/6 behaviors)** |
+| Spécialité | Chain-of-thought, niveau o3-mini |
+
+**Points forts mesurés :**
+- 1 700 lignes de `<think>` visible avant le code — raisonnement explicite sur invariants DDD, SOLID, stratégie de tests
+- Domain Layer exemplaire, SOLID strict, interfaces OTel complètes
+- NullTracer/Logger/Metrics pour les tests — pattern correct
+
+**Limites :**
+- Sécurité partielle : interfaces JWT sans implémentation, rate limiting stub `return true`
+- `htmlspecialchars()` utilisé à tort "contre les injections SQL"
+- Tests : Domain OK, JWTTest placeholder `assertEquals(401, 401)`
+- 663s — le plus lent
+
+**Usage recommandé :** revue architecturale, décisions de design, enseignement des patterns. Le `<think>` est un avantage pour comprendre le "pourquoi", pas pour la génération directe.
 
 ```bash
-# 1. Coding quotidien PHP/Symfony/JS/Python
-ollama pull codestral:22b
+make load MODEL=phi4-reasoning:plus
+```
 
-# 2. Agentic coding multi-fichiers
-ollama pull devstral-small-2
+---
 
-# 3. Architecture + revue sécurité approfondie
-ollama pull llama3.3:70b-instruct-q5_K_M
+### codestral:22b · Mistral AI 🇫🇷
+> **Coding ciblé rapide — Domain Layer en 39 secondes**
 
-# 4. Scanning sécurité rapide (pipeline CI)
-ollama pull phi4-reasoning
+| Attribut | Valeur |
+|---|---|
+| Taille disque | ~14 Go |
+| RAM chargé | ~30 Go |
+| Score benchmark | **C+ (2/6 behaviors)** |
+| Spécialité | PHP, JS, Python, Bash — coding quotidien |
 
-# 5. Raisonnement architecture
-ollama pull phi4-reasoning
+**Points forts mesurés :**
+- Le plus rapide : 39s pour une réponse complète
+- Domain Layer DDD excellent : Aggregate, Value Objects, Strategy Pattern
+- `final readonly class` partout, interfaces bien séparées
 
-# 6. Agents & tool-calling sécurité
-ollama pull gemma4:31b
+**Limites :**
+- S'arrête au Domain Layer — pas d'Application/Infrastructure/API/Tests
+- Sécurité, Observabilité, Performance : complètement absents
 
-# Embeddings pour RAG (recherche dans ta codebase Symfony)
-ollama pull nomic-embed-text
+**Usage recommandé :** tâches atomiques ciblées — implémenter un Value Object, écrire une fonction précise, refactoriser une classe. Ne pas utiliser pour des missions full-stack autonomes.
 
-# 7. qwen3.6:27b — dans le sandbox Docker uniquement (voir section Sandbox)
-docker network create --internal sandbox-net
-docker run -d --name ollama-sandbox --network sandbox-net \
-  --cap-drop ALL --read-only \
-  --tmpfs /tmp:size=512m --tmpfs /root/.ollama:size=100g \
-  -v $(pwd):/workspace:ro \
-  -e OLLAMA_HOST=127.0.0.1 \
-  --memory="90g" --cpus="16" \
-  -p 127.0.0.1:11435:11434 ollama/ollama
-docker exec ollama-sandbox ollama pull qwen3.6:27b
+```bash
+make load MODEL=codestral:22b
+```
+
+---
+
+### llama3.3:70b · Meta 🇺🇸
+> **Généraliste 70B — documentation et revue conceptuelle uniquement**
+
+| Attribut | Valeur |
+|---|---|
+| Taille disque | ~43 Go |
+| RAM chargé | **102 Go** (100% GPU) |
+| Score benchmark | **C (0/6 complets)** |
+
+**Résultat benchmark surprenant :**
+- 70B paramètres mais aucun behavior complet — tout est squelette avec `// ...`
+- Redis sans TTL, JWT absent, events jamais collectés
+- Le modèle lui-même admet : *"ce code n'est pas complet et nécessite probablement des modifications"*
+- **La spécialisation SWE-bench > taille brute des paramètres**
+
+**Limites réelles :**
+- 102 Go de RAM pour du code de qualité inférieure à devstral (15 Go)
+- Lent à charger, lent à décharger
+
+**Usage recommandé :** architecture système (K8s, microservices), documentation technique, revue OWASP conceptuelle, explication de patterns. **Ne pas utiliser pour la génération de code production.**
+
+```bash
+make load MODEL=llama3.3:70b   # ⚠ mobilise 102 Go de RAM
+```
+
+---
+
+### nomic-embed-text-v2-moe · Nomic 🇺🇸
+> **Embeddings RAG — recherche sémantique dans le codebase**
+
+| Attribut | Valeur |
+|---|---|
+| Taille disque | ~500 Mo |
+| RAM chargé | ~1 Go |
+| Dimensions | 768 |
+| Spécialité | RAG multilingue, MoE |
+
+**Usage :** indexer une codebase confidentielle pour Q&A via Open WebUI. Seul modèle ne produisant pas de texte — API embeddings uniquement.
+
+```bash
+curl http://localhost:11434/api/embeddings \
+  -d '{"model":"nomic-embed-text-v2-moe","prompt":"Zero-Trust API Symfony CQRS"}'
 ```
 
 ---
 
 ## Quel modèle pour quelle tâche ?
 
-| Tâche | Modèle à utiliser |
-|-------|------------------|
-| Écrire du code Symfony / PHP | `codestral:22b` |
-| Écrire du React / Node.js / JS | `codestral:22b` |
-| Scripts Bash / DevOps | `codestral:22b` |
-| Refactoring multi-fichiers | `devstral-small-2` |
-| Revue d'architecture (Clean / DDD) | `llama3.3:70b` |
-| Analyse OWASP / vulnérabilités | `llama3.3:70b` |
-| Pentest automatisé (CI/CD) | `phi4-reasoning` + OASIS |
-| Choix de pattern / 2ème opinion | `phi4-reasoning` |
-| Agents sécurité / tool-calling | `gemma4:31b` |
-| Coding pur non sensible (max perf) | `qwen3.6:27b` dans sandbox Docker → validé par `llama3.3:70b` |
+| Tâche | Modèle recommandé | Pourquoi |
+|---|---|---|
+| Code confidentiel full-stack | `devstral-small-2` | Seul à couvrir 100% spontanément |
+| DDD avancé / patterns complexes | `qwen3.6:27b` ⚠ | Architecture la plus élaborée — sandbox obligatoire |
+| Performance & OTel | `gemma4:31b` | Seul à importer les vraies classes OTel/Prometheus |
+| Revue architecturale | `phi4-reasoning:plus` | CoT visible — raisonnement explicite |
+| Fonction / VO / code ciblé rapide | `codestral:22b` | 39s, Domain excellent |
+| Documentation / revue K8s/OWASP | `llama3.3:70b` | Généraliste — pas pour le code production |
+| RAG codebase confidentielle | `nomic-embed-text-v2-moe` | Embeddings uniquement |
+| **Tout le reste** | **Claude Code** | Meilleur, plus rapide, contexte projet complet |
+
+### Workflow combiné Claude Code + Ollama
+
+```
+Claude Code                          Ollama local
+────────────────────────────────     ──────────────────────────────────
+Analyse le projet entier         →   Génère le scaffolding (devstral)
+Identifie les tâches             →   Implémente le code confidentiel
+Valide et intègre le code        ←   Produit les 20 fichiers PHP
+Lance les tests (make php-test)  →   (résultat validé par Claude Code)
+Commit + git                         
+```
+
+**Exemple concret :** Claude Code conçoit l'architecture, devstral-small-2 génère le code sensible qui ne peut pas quitter la machine, Claude Code relit, teste et commite.
+
+| Tâche | Qui fait quoi |
+|---|---|
+| Scaffolding multi-fichiers | `devstral-small-2` — génère, Claude Code intègre |
+| Revue code propriétaire | `codestral:22b` — local = rien n'est envoyé à Anthropic |
+| Décision architecturale SOLID/DDD | `phi4-reasoning:plus` — CoT visible, Claude Code valide |
+| Embedding RAG codebase confidentielle | `nomic-embed-text-v2-moe` — indexe, Open WebUI interroge |
+| Perf + OTel patterns | `gemma4:31b` — code de référence OTel/Prometheus |
+| Patterns DDD avancés | `qwen3.6:27b` + sandbox-guard — architecture, Claude Code corrige |
+| **Orchestration, contexte projet, git** | **Claude Code** — tout le reste |
 
 ---
 
-## Budget RAM — combinaisons simultanées
+## Budget RAM — chargement à la demande
 
-| Modèles chargés simultanément | RAM utilisée | RAM libre |
-|-------------------------------|-------------|-----------|
-| codestral:22b + llama3.3:70b | ~70 Go | 58 Go |
-| devstral-small-2 + llama3.3:70b | ~70 Go | 58 Go |
-| codestral + phi4-reasoning + phi4 | ~36 Go | 92 Go |
-| qwen3.6:27b (sandbox) + llama3.3:70b (audit) | ~123 Go | 5 Go ⚠️ limite |
-| qwen3.6:27b seul (sandbox) | ~75 Go | 53 Go |
+Un seul modèle en RAM à la fois via `make load` / `make switch` / `make unload`.
+
+| Modèle | RAM chargé | RAM libre (sur 128 Go) |
+|---|---|---|
+| nomic-embed-text-v2-moe | ~1 Go | 127 Go |
+| phi4-reasoning:plus | ~20 Go | 108 Go |
+| codestral:22b | ~30 Go | 98 Go |
+| devstral-small-2 | ~30 Go | 98 Go |
+| qwen3.6:27b | ~42 Go | 86 Go |
+| gemma4:31b | ~47 Go | 81 Go |
+| llama3.3:70b | **~102 Go** | 26 Go ⚠ |
+
+```bash
+make load MODEL=devstral-small-2   # charge + décharge l'actuel
+make switch MODEL=gemma4:31b       # idem
+make unload                        # libère toute la RAM
+make status                        # état complet
+```
+
+---
+
+## Commandes essentielles
+
+```bash
+# Charger / changer / décharger
+make load MODEL=codestral:22b
+make switch MODEL=devstral-small-2
+make unload
+
+# Modèles Alibaba — filtre obligatoire
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
+
+# Benchmark complet
+make test-full                              # tous les modèles
+make test-full-model MODEL=gemma4:31b       # un seul
+
+# Monitoring
+make status
+make monitor-live
+
+# Env PHP isolé (PostgreSQL 16 + Redis 7 + RabbitMQ)
+make php-up
+make php-test
+make php-down
+```
 
 ---
 
 ## État des installations
 
-| Modèle | Origine | Confiance | Taille | Statut |
-|--------|---------|-----------|--------|--------|
-| codestral:22b | Mistral 🇫🇷 | ✅ | ~22 Go | ⬜ À installer |
-| devstral-small-2 | Mistral 🇫🇷 | ✅ | ~22 Go | ⬜ À installer |
-| llama3.3:70b Q5 | Meta 🇺🇸 | ✅ | ~48 Go | ⬜ À installer |
-| phi4-reasoning | Meta 🇺🇸 | ✅ | ~5 Go | ⬜ À installer |
-| phi4-reasoning | Microsoft 🇺🇸 | ✅ | ~9 Go | ⬜ À installer |
-| gemma4:31b | Google 🇺🇸 | ✅ | ~20 Go | ⬜ À installer |
-| nomic-embed-text | Nomic 🇺🇸 | ✅ | ~274 Mo | ⬜ À installer |
-| qwen3.6:27b | Moonshot 🇨🇳 | ⚠️ Sandbox Docker | ~75 Go | ⬜ À installer |
+```bash
+ollama list     # modèles installés sur disque
+ollama ps       # modèles chargés en RAM
+make status     # vue complète
+make models-check-new  # veille — nouveaux modèles disponibles
+```
+
+| Modèle | Origine | Confiance | Taille disque | Score réel |
+|---|---|---|---|---|
+| `codestral:22b` | Mistral 🇫🇷 | ✅ | ~14 Go | C+ |
+| `devstral-small-2` | Mistral 🇫🇷 | ✅ | ~15 Go | **A-** |
+| `phi4-reasoning:plus` | Microsoft 🇺🇸 | ✅ | ~9 Go | B |
+| `gemma4:31b` | Google 🇺🇸 | ✅ | ~20 Go | B+ |
+| `llama3.3:70b` | Meta 🇺🇸 | ✅ | ~43 Go | C |
+| `qwen3.6:27b` | Alibaba 🇨🇳 | ⚠ sandbox | ~17 Go | **A-** |
+| `nomic-embed-text-v2-moe` | Nomic 🇺🇸 | ✅ | ~500 Mo | RAG uniquement |
