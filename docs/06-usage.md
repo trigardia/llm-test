@@ -36,14 +36,14 @@ ollama stop codestral:22b
 
 ---
 
-## Workflow qwen3.6:35b (sandbox obligatoire)
+## Workflow qwen3.6:27b (sandbox obligatoire)
 
 ```bash
 # Vérifier que le container Kimi tourne
 docker ps | grep ollama-sandbox
 
 # Utiliser Kimi avec le filtre de sécurité
-ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
+ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
 **Rappel** : Ne jamais envoyer à Kimi des secrets, tokens, code propriétaire ou chemins sensibles.
@@ -61,7 +61,7 @@ ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
 | Design patterns Java / SOLID / Architecture | `phi4-reasoning` |
 | Agents ELK / Monitoring / Tool-calling | `gemma4:31b` |
 | Optimisation Redis / Performance | `codestral:22b` ou `phi4-reasoning` |
-| Coding non sensible (rapide) | `qwen3.6:35b` (sandbox) |
+| Coding non sensible (rapide) | `qwen3.6:27b` (sandbox) |
 | Recherche dans documents / Logs ELK | `nomic-embed-text` + RAG |
 
 ---

@@ -118,16 +118,16 @@ models-all: ## Télécharger TOUS les modèles (~160 GB)
 	ollama pull gemma4:31b
 	ollama pull devstral-small-2
 	ollama pull llama3.3:70b
-	ollama pull qwen3.6:35b
+	ollama pull qwen3.6:27b
 	@echo "$(GREEN)✓ Tous les modèles installés$(RESET)"
 
-qwen-pull: ## Télécharger qwen3.6:35b (⚠ modèle Alibaba — sortie via sandbox-guard.sh)
-	@echo "$(CYAN)Téléchargement de qwen3.6:35b...$(RESET)"
-	@bash $(SCRIPTS_DIR)/check-resources.sh "qwen3.6:35b" 24
-	ollama pull qwen3.6:35b
+qwen-pull: ## Télécharger qwen3.6:27b (⚠ modèle Alibaba — sortie via sandbox-guard.sh)
+	@echo "$(CYAN)Téléchargement de qwen3.6:27b...$(RESET)"
+	@bash $(SCRIPTS_DIR)/check-resources.sh "qwen3.6:27b" 24
+	ollama pull qwen3.6:27b
 	@chmod +x $(SCRIPTS_DIR)/sandbox-guard.sh
-	@echo "$(GREEN)✓ qwen3.6:35b installé$(RESET)"
-	@echo "$(RED)⚠ Usage obligatoire : ollama run qwen3.6:35b \"prompt\" | ./scripts/sandbox-guard.sh$(RESET)"
+	@echo "$(GREEN)✓ qwen3.6:27b installé$(RESET)"
+	@echo "$(RED)⚠ Usage obligatoire : ollama run qwen3.6:27b \"prompt\" | ./scripts/sandbox-guard.sh$(RESET)"
 
 ##@ Gestion RAM — chargement à la demande
 load: ## Charger un modèle en RAM (usage: make load MODEL=gemma4:31b)

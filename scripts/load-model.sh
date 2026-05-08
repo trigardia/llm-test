@@ -21,7 +21,6 @@ model_size() {
         gemma4:31b)              echo 20 ;;
         gemma4:31b-bf16)         echo 62 ;;
         llama3.3:70b)            echo 43 ;;
-        qwen3.6:35b)             echo 24 ;;
         qwen3.6:27b)             echo 17 ;;
         *)                       echo 10 ;;
     esac
@@ -66,7 +65,7 @@ fi
 if [ -z "$MODEL" ]; then
     echo -e "${RED}Usage : make load MODEL=<nom>${RESET}"
     echo -e "        make load MODEL=gemma4:31b"
-    echo -e "        make load MODEL=qwen3.6:35b"
+    echo -e "        make load MODEL=qwen3.6:27b"
     echo -e "        make unload"
     exit 1
 fi

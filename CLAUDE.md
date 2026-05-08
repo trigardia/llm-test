@@ -39,17 +39,17 @@ LLM/
 | Niveau | Origine | Règle |
 |--------|---------|-------|
 | ✅ Confiant | Mistral 🇫🇷, Meta 🇺🇸, Google 🇺🇸, Microsoft 🇺🇸 | Usage libre port 11434 |
-| ⚠️ Filtré | qwen3.6:35b — Alibaba 🇨🇳 | Sortie obligatoirement via `sandbox-guard.sh` |
+| ⚠️ Filtré | qwen3.6:27b — Alibaba 🇨🇳 | Sortie obligatoirement via `sandbox-guard.sh` |
 | ❌ Exclu | DeepSeek, modèles cloud chinois non locaux | Ne jamais suggérer |
 
-### qwen3.6:35b — protocole obligatoire
+### qwen3.6:27b — protocole obligatoire
 - Tourne sur le port **11434** (Ollama natif, pas de Docker sandbox)
 - **Toute sortie doit passer par `scripts/sandbox-guard.sh` avant usage**
 - Interdit sur : secrets, tokens, credentials, code propriétaire
-- Workflow : `qwen3.6:35b → sandbox-guard.sh → validation humaine → commit`
+- Workflow : `qwen3.6:27b → sandbox-guard.sh → validation humaine → commit`
 
 ```bash
-ollama run qwen3.6:35b "question" | ./scripts/sandbox-guard.sh
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
 ```
 
 ### Qualité du code généré
@@ -69,16 +69,16 @@ Tout code produit ou validé ici doit respecter :
 | `llama3.3:70b` | Meta 🇺🇸 | Architecture, revue sécurité OWASP, K8s/RedHat |
 | `phi4-reasoning` | Microsoft 🇺🇸 | Architecture, SOLID, Java — niveau raisonnement o3-mini |
 | `gemma4:31b` | Google 🇺🇸 | Agents sécurité, tool-calling, ELK, context 256K |
-| `qwen3.6:35b` | Alibaba 🇨🇳 ⚠️ | Coding pur non sensible — sortie via sandbox-guard.sh |
+| `qwen3.6:27b` | Alibaba 🇨🇳 ⚠️ | Coding pur non sensible — sortie via sandbox-guard.sh |
 | `nomic-embed-text-v2-moe` | Nomic 🇺🇸 | Embeddings RAG multilingue |
 
 **Modèles retirés (obsolètes)**
-- ~~`llama3.1:8b`~~ — remplacé par phi4-reasoning (même taille, qualité sans comparaison)
-- ~~`phi4:14b`~~ — remplacé par phi4-reasoning:14b
+- ~~`llama3.1:8b`~~ — remplacé par phi4-reasoning:plus (même taille, qualité sans comparaison)
+- ~~`phi4:14b`~~ — remplacé par phi4-reasoning:plus
 - ~~`devstral:24b`~~ — remplacé par devstral-small-2 (plus récent, meilleur)
 - ~~`nomic-embed-text`~~ — remplacé par v2-moe (multilingue, MoE)
 - ~~`gemma3:27b`~~ — remplacé par gemma4:31b
-- ~~`qwen2.5-coder:32b`~~ — remplacé par qwen3.6:35b
+- ~~`qwen2.5-coder:32b`~~ — remplacé par qwen3.6:27b
 
 ---
 
@@ -91,7 +91,7 @@ make switch MODEL=llama3.3:70b
 make unload
 
 # Modèles Alibaba — filtre obligatoire
-ollama run qwen3.6:35b "question" | ./scripts/sandbox-guard.sh
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
 
 # Statut complet
 make status

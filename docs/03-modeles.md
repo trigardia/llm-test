@@ -10,7 +10,7 @@
 | `phi4-reasoning` | Meta 🇺🇸 | ~4.7 GB | 11434 | Scanning sécurité rapide, pipeline CI, **scripts Linux** |
 | `phi4-reasoning` | Microsoft 🇺🇸 | ~8.9 GB | 11434 | 2ème opinion architecture, SOLID, **Java design patterns** |
 | `gemma4:31b` | Google 🇺🇸 | ~19 GB | 11434 | Agents sécurité, tool-calling, **ELK/monitoring queries** |
-| `qwen3.6:35b` | Moonshot 🇨🇳 | ~? GB | **11435** | Coding pur non sensible — sandbox Docker |
+| `qwen3.6:27b` | Moonshot 🇨🇳 | ~? GB | **11435** | Coding pur non sensible — sandbox Docker |
 | `nomic-embed-text` | Nomic 🇺🇸 | ~274 MB | 11434 | Embeddings RAG, **indexation logs ELK** |
 
 ---
@@ -20,7 +20,7 @@
 | Niveau | Origine | Règle |
 |--------|---------|-------|
 | ✅ Confiant | Mistral 🇫🇷, Meta 🇺🇸, Google 🇺🇸, Microsoft 🇺🇸 | Usage libre |
-| ⚠️ Sandboxé | qwen3.6:35b — Moonshot 🇨🇳 | Docker obligatoire + sandbox-guard.sh |
+| ⚠️ Sandboxé | qwen3.6:27b — Moonshot 🇨🇳 | Docker obligatoire + sandbox-guard.sh |
 | ❌ Exclu | Qwen, DeepSeek, tout modèle chinois sans sandbox | Ne pas installer |
 
 ---

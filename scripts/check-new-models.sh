@@ -14,7 +14,7 @@ KNOWN_MODELS=(
     "llama3.3:70b"
     "phi4-reasoning"
     "gemma4:31b"
-    "qwen3.6:35b"
+    "qwen3.6:27b"
     "nomic-embed-text-v2-moe"
 )
 

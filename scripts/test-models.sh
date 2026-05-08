@@ -14,7 +14,7 @@ REPORT="$RESULTS_DIR/rapport-$(date '+%Y%m%d-%H%M%S').md"
 RAM_MARGIN_GB=20
 
 # ── Ordre des modèles (léger → lourd) ──────────────────────
-MODELS="nomic-embed-text-v2-moe phi4-reasoning codestral:22b devstral-small-2 gemma4:31b llama3.3:70b qwen3.6:35b"
+MODELS="nomic-embed-text-v2-moe phi4-reasoning codestral:22b devstral-small-2 gemma4:31b llama3.3:70b qwen3.6:27b"
 
 # ── Taille en Go par modèle ─────────────────────────────────
 model_size() {
@@ -26,7 +26,6 @@ model_size() {
         gemma4:31b)              echo 20 ;;
         gemma4:31b-bf16)         echo 62 ;;
         llama3.3:70b)            echo 43 ;;
-        qwen3.6:35b)             echo 24 ;;
         qwen3.6:27b)             echo 17 ;;
         *)                       echo 0  ;;
     esac
@@ -47,7 +46,7 @@ model_prompt() {
             echo "Donne une requête KQL Kibana pour détecter des tentatives brute-force SSH dans les logs ELK." ;;
         llama3.3:70b)
             echo "Architecture K8s pour déployer une app Java Spring Boot haute disponibilité ? 3 points max." ;;
-        qwen3.6:35b|qwen3.6:27b)
+        qwen3.6:27b)
             echo "Écris une fonction Python qui parse un fichier YAML de config Ansible. Réponse courte." ;;
         *)
             echo "Tu fonctionnes correctement ? Réponds en une phrase." ;;

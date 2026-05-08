@@ -8,7 +8,7 @@ Tous les scripts se trouvent dans `scripts/`. Ils sont appelés par le Makefile 
 
 | Script | Rôle | Appelé par |
 |--------|------|-----------|
-| `sandbox-guard.sh` | Filtre de sécurité obligatoire pour les sorties qwen3.6:35b | Manuel / pipeline |
+| `sandbox-guard.sh` | Filtre de sécurité obligatoire pour les sorties qwen3.6:27b | Manuel / pipeline |
 | `monitor.sh` | Monitoring RAM · température · ventilateurs · modèles | `make monitor` / `make monitor-live` |
 | `check-resources.sh` | Garde-fou RAM avant chargement d'un modèle | `make check-ram` / `make models*` |
 | `security-perf-monitor.sh` | Audit sécurité réseau + performance stack | `make security` / `make security-live` |
@@ -19,19 +19,19 @@ Tous les scripts se trouvent dans `scripts/`. Ils sont appelés par le Makefile 
 ## `sandbox-guard.sh`
 
 ### Rôle
-Filtre **obligatoire** appliqué à toute sortie du modèle qwen3.6:35b. Détecte et bloque :
+Filtre **obligatoire** appliqué à toute sortie du modèle qwen3.6:27b. Détecte et bloque :
 - Exfiltration de chemins système ou credentials
 - Sorties contenant des tokens, secrets ou données sensibles
 - Contenu suspect nécessitant validation humaine
 
 ### Usage
 ```bash
-ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
+ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
 ### Workflow complet Kimi
 ```
-Prompt → qwen3.6:35b (port 11435)
+Prompt → qwen3.6:27b (port 11435)
               ↓
         sandbox-guard.sh          ← ce script
               ↓

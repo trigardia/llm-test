@@ -186,11 +186,11 @@ ollama run gemma4:31b
 
 ---
 
-## Modèle 7 — qwen3.6:35b · Moonshot AI (Chine) 🇨🇳 ⚠️ Sandboxé
+## Modèle 7 — qwen3.6:27b · Moonshot AI (Chine) 🇨🇳 ⚠️ Sandboxé
 > Meilleur coding open source — usage restreint au code non sensible
 
 ```bash
-ollama pull qwen3.6:35b
+ollama pull qwen3.6:27b
 ```
 
 | Attribut | Valeur |
@@ -240,10 +240,10 @@ docker run -d \
   ollama/ollama
 
 # Charger Kimi dans le container
-docker exec ollama-sandbox ollama pull qwen3.6:35b
+docker exec ollama-sandbox ollama pull qwen3.6:27b
 
 # Utiliser Kimi via le port dédié (11435 ≠ 11434 pour les autres modèles)
-ollama run qwen3.6:35b
+ollama run qwen3.6:27b
 ```
 
 **Ce que le sandbox impose :**
@@ -293,13 +293,13 @@ echo "$INPUT"
 chmod +x /Users/devsecops/projects/macbook/scripts/sandbox-guard.sh
 
 # Usage : toujours passer la sortie de Kimi dans le guard
-ollama run qwen3.6:35b "ta question" | ./scripts/sandbox-guard.sh
+ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
 ### Workflow sécurisé avec Kimi
 
 ```
-qwen3.6:35b (sandbox Docker)
+qwen3.6:27b (sandbox Docker)
         ↓
   sandbox-guard.sh (détection patterns dangereux)
         ↓
@@ -334,7 +334,7 @@ ollama pull gemma4:31b
 # Embeddings pour RAG (recherche dans ta codebase Symfony)
 ollama pull nomic-embed-text
 
-# 7. qwen3.6:35b — dans le sandbox Docker uniquement (voir section Sandbox)
+# 7. qwen3.6:27b — dans le sandbox Docker uniquement (voir section Sandbox)
 docker network create --internal sandbox-net
 docker run -d --name ollama-sandbox --network sandbox-net \
   --cap-drop ALL --read-only \
@@ -343,7 +343,7 @@ docker run -d --name ollama-sandbox --network sandbox-net \
   -e OLLAMA_HOST=127.0.0.1 \
   --memory="90g" --cpus="16" \
   -p 127.0.0.1:11435:11434 ollama/ollama
-docker exec ollama-sandbox ollama pull qwen3.6:35b
+docker exec ollama-sandbox ollama pull qwen3.6:27b
 ```
 
 ---
@@ -361,7 +361,7 @@ docker exec ollama-sandbox ollama pull qwen3.6:35b
 | Pentest automatisé (CI/CD) | `phi4-reasoning` + OASIS |
 | Choix de pattern / 2ème opinion | `phi4-reasoning` |
 | Agents sécurité / tool-calling | `gemma4:31b` |
-| Coding pur non sensible (max perf) | `qwen3.6:35b` dans sandbox Docker → validé par `llama3.3:70b` |
+| Coding pur non sensible (max perf) | `qwen3.6:27b` dans sandbox Docker → validé par `llama3.3:70b` |
 
 ---
 
@@ -372,8 +372,8 @@ docker exec ollama-sandbox ollama pull qwen3.6:35b
 | codestral:22b + llama3.3:70b | ~70 Go | 58 Go |
 | devstral-small-2 + llama3.3:70b | ~70 Go | 58 Go |
 | codestral + phi4-reasoning + phi4 | ~36 Go | 92 Go |
-| qwen3.6:35b (sandbox) + llama3.3:70b (audit) | ~123 Go | 5 Go ⚠️ limite |
-| qwen3.6:35b seul (sandbox) | ~75 Go | 53 Go |
+| qwen3.6:27b (sandbox) + llama3.3:70b (audit) | ~123 Go | 5 Go ⚠️ limite |
+| qwen3.6:27b seul (sandbox) | ~75 Go | 53 Go |
 
 ---
 
@@ -388,4 +388,4 @@ docker exec ollama-sandbox ollama pull qwen3.6:35b
 | phi4-reasoning | Microsoft 🇺🇸 | ✅ | ~9 Go | ⬜ À installer |
 | gemma4:31b | Google 🇺🇸 | ✅ | ~20 Go | ⬜ À installer |
 | nomic-embed-text | Nomic 🇺🇸 | ✅ | ~274 Mo | ⬜ À installer |
-| qwen3.6:35b | Moonshot 🇨🇳 | ⚠️ Sandbox Docker | ~75 Go | ⬜ À installer |
+| qwen3.6:27b | Moonshot 🇨🇳 | ⚠️ Sandbox Docker | ~75 Go | ⬜ À installer |

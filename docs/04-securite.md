@@ -17,10 +17,10 @@ La sécurité est la **priorité absolue** de cette stack. Aucun compromis.
 | Niveau | Modèles | Règle |
 |--------|---------|-------|
 | ✅ Confiant | Mistral, Meta, Google, Microsoft | Usage libre |
-| ⚠️ Sandboxé | qwen3.6:35b | Docker isolé + sandbox-guard.sh obligatoire |
+| ⚠️ Sandboxé | qwen3.6:27b | Docker isolé + sandbox-guard.sh obligatoire |
 | ❌ Exclu | Qwen, DeepSeek, modèles chinois non sandboxés | Interdit |
 
-### 3. Données interdites avec qwen3.6:35b
+### 3. Données interdites avec qwen3.6:27b
 - Secrets, tokens, credentials
 - Code propriétaire
 - Chemins hors dossier de travail
@@ -28,10 +28,10 @@ La sécurité est la **priorité absolue** de cette stack. Aucun compromis.
 
 ---
 
-## Protocole qwen3.6:35b
+## Protocole qwen3.6:27b
 
 ```
-Prompt → qwen3.6:35b (port 11435)
+Prompt → qwen3.6:27b (port 11435)
               ↓
         sandbox-guard.sh          ← filtre automatique
               ↓
@@ -45,7 +45,7 @@ Prompt → qwen3.6:35b (port 11435)
 Utilisation :
 
 ```bash
-ollama run qwen3.6:35b "question" | ./scripts/sandbox-guard.sh
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
 ```
 
 ---
@@ -94,6 +94,6 @@ Avant chaque mise en production :
 - [ ] Ports vérifiés sur `127.0.0.1` uniquement
 - [ ] `ENABLE_SIGNUP=false` dans Open WebUI
 - [ ] `WEBUI_AUTH=true` dans Open WebUI
-- [ ] qwen3.6:35b uniquement sur port 11435
+- [ ] qwen3.6:27b uniquement sur port 11435
 - [ ] `sandbox-guard.sh` exécutable (`chmod +x`)
 - [ ] Aucun modèle exclu installé (`ollama list`)

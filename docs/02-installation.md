@@ -87,7 +87,7 @@ Voir [03-modeles.md](03-modeles.md) pour l'ordre recommandé et les commandes.
 
 ---
 
-## Étape 7 — Sandbox qwen3.6:35b (optionnel)
+## Étape 7 — Sandbox qwen3.6:27b (optionnel)
 
 ```bash
 # Créer le réseau isolé

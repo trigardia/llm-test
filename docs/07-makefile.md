@@ -92,7 +92,7 @@ Quitter les logs : `Ctrl+C`
 
 ---
 
-## qwen3.6:35b — Sandbox sécurisé
+## qwen3.6:27b — Sandbox sécurisé
 
 ### `make qwen-pull`
 Crée le réseau Docker isolé `sandbox-net` et démarre le container Kimi sur le port **11435**.
@@ -104,7 +104,7 @@ make qwen-pull
 # Rend sandbox-guard.sh exécutable
 ```
 
-### `ollama rm qwen3.6:35b`
+### `ollama rm qwen3.6:27b`
 Arrête et supprime le container Kimi. Le réseau sandbox reste.
 
 ### `ollama list`
