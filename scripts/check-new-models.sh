@@ -14,7 +14,7 @@ KNOWN_MODELS=(
     "llama3.3:70b"
     "llama3.1:8b"
     "phi4:14b"
-    "gemma3:27b"
+    "gemma4:31b"
     "kimi-k2.6"
     "nomic-embed-text"
 )

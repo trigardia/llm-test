@@ -14,7 +14,7 @@ REPORT="$RESULTS_DIR/rapport-$(date '+%Y%m%d-%H%M%S').md"
 RAM_MARGIN_GB=20
 
 # ── Ordre des modèles (léger → lourd) ──────────────────────
-MODELS="nomic-embed-text llama3.1:8b phi4:14b codestral:22b devstral:24b gemma3:27b llama3.3:70b"
+MODELS="nomic-embed-text llama3.1:8b phi4:14b codestral:22b devstral:24b gemma4:31b llama3.3:70b"
 
 # ── Taille en Go par modèle ─────────────────────────────────
 model_size() {
@@ -24,7 +24,8 @@ model_size() {
         phi4:14b)         echo 9 ;;
         codestral:22b)    echo 14 ;;
         devstral:24b)     echo 15 ;;
-        gemma3:27b)       echo 18 ;;
+        gemma4:31b)       echo 20 ;;
+        gemma4:31b-bf16)  echo 62 ;;
         llama3.3:70b)     echo 43 ;;
         qwen2.5-coder:32b) echo 19 ;;
         *)                echo 0 ;;
@@ -44,7 +45,7 @@ model_prompt() {
             echo "Écris une fonction PHP qui sanitise une entrée utilisateur contre les injections SQL. Réponse courte." ;;
         devstral:24b)
             echo "Donne la structure Clean Architecture pour un projet Symfony avec un use case CreateUser. Réponse courte." ;;
-        gemma3:27b)
+        gemma4:31b|gemma4:31b-bf16)
             echo "Donne une requête KQL Kibana pour détecter des tentatives brute-force SSH dans les logs ELK." ;;
         llama3.3:70b)
             echo "Architecture K8s pour déployer une app Java Spring Boot haute disponibilité ? 3 points max." ;;

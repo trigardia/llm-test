@@ -59,7 +59,7 @@ OLLAMA_HOST=127.0.0.1:11435 ollama run kimi-k2.6 "ta question" | ./scripts/kimi-
 | Architecture K8s / Revue OWASP / RedHat | `llama3.3:70b` |
 | Scan rapide CI/CD / Scripts Linux | `llama3.1:8b` |
 | Design patterns Java / SOLID / Architecture | `phi4:14b` |
-| Agents ELK / Monitoring / Tool-calling | `gemma3:27b` |
+| Agents ELK / Monitoring / Tool-calling | `gemma4:31b` |
 | Optimisation Redis / Performance | `codestral:22b` ou `phi4:14b` |
 | Coding non sensible (rapide) | `kimi-k2.6` (sandbox) |
 | Recherche dans documents / Logs ELK | `nomic-embed-text` + RAG |

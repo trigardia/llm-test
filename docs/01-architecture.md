@@ -11,7 +11,7 @@
 │   │  GPU M5 Max · Mémoire unifiée 128 Go                │  │
 │   │                                                     │  │
 │   │  codestral:22b · devstral:24b · llama3.3:70b       │  │
-│   │  llama3.1:8b · phi4:14b · gemma3:27b               │  │
+│   │  llama3.1:8b · phi4:14b · gemma4:31b               │  │
 │   │  nomic-embed-text                                   │  │
 │   └─────────────────────┬───────────────────────────────┘  │
 │                         │ API REST                          │

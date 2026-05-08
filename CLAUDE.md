@@ -56,7 +56,7 @@ Tout code produit ou validé ici doit respecter :
 | `llama3.3:70b` | Meta 🇺🇸 | 11434 | Architecture, revue sécurité OWASP, K8s/RedHat |
 | `llama3.1:8b` | Meta 🇺🇸 | 11434 | Scanning sécurité rapide, pipeline CI |
 | `phi4:14b` | Microsoft 🇺🇸 | 11434 | 2ème opinion architecture, SOLID, Java |
-| `gemma3:27b` | Google 🇺🇸 | 11434 | Agents sécurité, tool-calling, ELK |
+| `gemma4:31b` | Google 🇺🇸 | 11434 | Agents sécurité, tool-calling, ELK, context 256K |
 | `qwen2.5-coder:32b` | Alibaba 🇨🇳 | **11435** | Coding pur non sensible — sandbox Docker |
 | `nomic-embed-text` | Nomic 🇺🇸 | 11434 | Embeddings RAG |
 

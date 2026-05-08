@@ -85,7 +85,7 @@ Quitter les logs : `Ctrl+C`
 | Commande | Modèles téléchargés | Taille approx. |
 |----------|---------------------|----------------|
 | `make models-light` | nomic-embed-text · llama3.1:8b | ~18 Go |
-| `make models` | + codestral:22b · phi4:14b · gemma3:27b · devstral:24b | ~60 Go |
+| `make models` | + codestral:22b · phi4:14b · gemma4:31b · devstral:24b | ~60 Go |
 | `make models-all` | + llama3.3:70b | ~103 Go |
 
 **Recommandation** : commencer par `make models-light` pour tester le setup, puis `make models` pour le stack complet.

@@ -106,7 +106,7 @@ models: ## Télécharger les modèles standards (~60 GB)
 	ollama pull llama3.1:8b
 	ollama pull codestral:22b
 	ollama pull phi4:14b
-	ollama pull gemma3:27b
+	ollama pull gemma4:31b
 	ollama pull devstral:24b
 	@echo "$(GREEN)✓ Modèles standards installés$(RESET)"
 
@@ -118,7 +118,7 @@ models-all: ## Télécharger TOUS les modèles (~103 GB)
 	ollama pull llama3.1:8b
 	ollama pull codestral:22b
 	ollama pull phi4:14b
-	ollama pull gemma3:27b
+	ollama pull gemma4:31b
 	ollama pull devstral:24b
 	ollama pull llama3.3:70b
 	@echo "$(GREEN)✓ Tous les modèles installés$(RESET)"

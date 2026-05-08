@@ -9,7 +9,7 @@
 | `llama3.3:70b` | Meta 🇺🇸 | ~43 GB | 11434 | Architecture, revue sécurité OWASP, **K8s/RedHat** |
 | `llama3.1:8b` | Meta 🇺🇸 | ~4.7 GB | 11434 | Scanning sécurité rapide, pipeline CI, **scripts Linux** |
 | `phi4:14b` | Microsoft 🇺🇸 | ~8.9 GB | 11434 | 2ème opinion architecture, SOLID, **Java design patterns** |
-| `gemma3:27b` | Google 🇺🇸 | ~17 GB | 11434 | Agents sécurité, tool-calling, **ELK/monitoring queries** |
+| `gemma4:31b` | Google 🇺🇸 | ~19 GB | 11434 | Agents sécurité, tool-calling, **ELK/monitoring queries** |
 | `kimi-k2.6` | Moonshot 🇨🇳 | ~? GB | **11435** | Coding pur non sensible — sandbox Docker |
 | `nomic-embed-text` | Nomic 🇺🇸 | ~274 MB | 11434 | Embeddings RAG, **indexation logs ELK** |
 
@@ -43,7 +43,7 @@ ollama pull codestral:22b
 ollama pull phi4:14b
 
 # 5. Agents sécurité (17 GB)
-ollama pull gemma3:27b
+ollama pull gemma4:31b
 
 # 6. Refactoring multi-fichiers (14 GB)
 ollama pull devstral:24b

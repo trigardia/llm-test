@@ -163,14 +163,14 @@ ollama run phi4:14b
 > Tool-calling · Agents · Analyse de vulnérabilités automatisée
 
 ```bash
-ollama pull gemma3:27b-instruct-q8_0
+ollama pull gemma4:31b
 ```
 
 | Attribut | Valeur |
 |----------|--------|
 | Origine | Google — USA (Apache 2.0) |
-| Taille | ~24 Go à Q8 |
-| RAM utilisée | ~24 Go |
+| Taille | ~20 Go à Q8 |
+| RAM utilisée | ~20 Go |
 | Spécialité | Function calling, tool use, agents automatisés |
 
 **Pourquoi pour ton stack :**
@@ -179,7 +179,7 @@ ollama pull gemma3:27b-instruct-q8_0
 - Apache 2.0 — le plus permissif pour usage commercial
 
 ```bash
-ollama run gemma3:27b-instruct-q8_0
+ollama run gemma4:31b
 ```
 
 ---
@@ -329,7 +329,7 @@ ollama pull llama3.1:8b
 ollama pull phi4:14b
 
 # 6. Agents & tool-calling sécurité
-ollama pull gemma3:27b-instruct-q8_0
+ollama pull gemma4:31b
 
 # Embeddings pour RAG (recherche dans ta codebase Symfony)
 ollama pull nomic-embed-text
@@ -360,7 +360,7 @@ docker exec ollama-kimi ollama pull kimi-k2.6
 | Analyse OWASP / vulnérabilités | `llama3.3:70b` |
 | Pentest automatisé (CI/CD) | `llama3.1:8b` + OASIS |
 | Choix de pattern / 2ème opinion | `phi4:14b` |
-| Agents sécurité / tool-calling | `gemma3:27b` |
+| Agents sécurité / tool-calling | `gemma4:31b` |
 | Coding pur non sensible (max perf) | `kimi-k2.6` dans sandbox Docker → validé par `llama3.3:70b` |
 
 ---
@@ -386,6 +386,6 @@ docker exec ollama-kimi ollama pull kimi-k2.6
 | llama3.3:70b Q5 | Meta 🇺🇸 | ✅ | ~48 Go | ⬜ À installer |
 | llama3.1:8b | Meta 🇺🇸 | ✅ | ~5 Go | ⬜ À installer |
 | phi4:14b | Microsoft 🇺🇸 | ✅ | ~9 Go | ⬜ À installer |
-| gemma3:27b Q8 | Google 🇺🇸 | ✅ | ~24 Go | ⬜ À installer |
+| gemma4:31b | Google 🇺🇸 | ✅ | ~20 Go | ⬜ À installer |
 | nomic-embed-text | Nomic 🇺🇸 | ✅ | ~274 Mo | ⬜ À installer |
 | kimi-k2.6 | Moonshot 🇨🇳 | ⚠️ Sandbox Docker | ~75 Go | ⬜ À installer |
