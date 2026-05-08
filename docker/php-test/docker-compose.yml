@@ -1,0 +1,111 @@
+services:
+
+  # ============================================================
+  # PHP 8.3 — Validation du code généré par les LLMs
+  # Usage : make test-php CMD="php -l src/Domain/Transaction.php"
+  #         make test-php CMD="composer install && vendor/bin/phpunit"
+  # ============================================================
+  php-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: php-test
+    working_dir: /app
+    volumes:
+      - ../../tests/generated:/app              # code généré par les LLMs
+      - php-composer-cache:/root/.composer      # cache Composer entre runs
+    environment:
+      - DATABASE_URL=postgresql://llm:llm_test_pwd@postgres-test:5432/llm_test
+      - REDIS_URL=redis://redis-test:6379
+      - RABBITMQ_URL=amqp://llm:llm_test_pwd@rabbitmq-test:5672
+      - APP_ENV=test
+      - APP_SECRET=test_secret_not_used_in_prod
+    networks:
+      - php-test-net
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_healthy
+      rabbitmq-test:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 2g
+    cpus: "4"
+
+  # ============================================================
+  # PostgreSQL 16 — Source de vérité (optimistic locking)
+  # ============================================================
+  postgres-test:
+    image: postgres:16-alpine
+    container_name: postgres-test
+    environment:
+      POSTGRES_DB: llm_test
+      POSTGRES_USER: llm
+      POSTGRES_PASSWORD: llm_test_pwd
+    ports:
+      - "127.0.0.1:5433:5432"                  # 5433 pour éviter conflit PG local
+    networks:
+      - php-test-net
+    tmpfs:
+      - /var/lib/postgresql/data                # données en RAM — nettoyées au restart
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U llm -d llm_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    mem_limit: 512m
+    cpus: "1"
+
+  # ============================================================
+  # Redis 7 — Cache profils de risque + rate limiting
+  # ============================================================
+  redis-test:
+    image: redis:7-alpine
+    container_name: redis-test
+    command: redis-server --maxmemory 512mb --maxmemory-policy allkeys-lru --loglevel warning
+    ports:
+      - "127.0.0.1:6380:6379"                  # 6380 pour éviter conflit Redis local
+    networks:
+      - php-test-net
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    mem_limit: 512m
+    cpus: "1"
+
+  # ============================================================
+  # RabbitMQ — Event bus (domain events + outbox pattern)
+  # ============================================================
+  rabbitmq-test:
+    image: rabbitmq:3.13-management-alpine
+    container_name: rabbitmq-test
+    environment:
+      RABBITMQ_DEFAULT_USER: llm
+      RABBITMQ_DEFAULT_PASS: llm_test_pwd
+      RABBITMQ_DEFAULT_VHOST: llm_test
+    ports:
+      - "127.0.0.1:5673:5672"                  # AMQP
+      - "127.0.0.1:15673:15672"                # Management UI
+    networks:
+      - php-test-net
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_port_connectivity"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 512m
+    cpus: "1"
+
+volumes:
+  php-composer-cache:
+    driver: local
+
+networks:
+  php-test-net:
+    driver: bridge
+    internal: true                              # Pas d'accès internet — isolation totale

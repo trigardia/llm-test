@@ -15,7 +15,7 @@ RAM_MARGIN_GB=20
 model_size() {
     case "$1" in
         nomic-embed-text-v2-moe) echo 1  ;;
-        phi4-reasoning)          echo 9  ;;
+        phi4-reasoning:plus)          echo 9  ;;
         codestral:22b)           echo 14 ;;
         devstral-small-2)        echo 15 ;;
         gemma4:31b)              echo 20 ;;

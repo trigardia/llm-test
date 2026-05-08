@@ -1,10 +1,12 @@
 .PHONY: help start stop restart status logs logs-webui logs-search update \
         models models-light models-all qwen-pull clean \
         load unload switch \
-        test test-model monitor monitor-live security security-live \
-        check-ram models-list models-check-new ollama-check stop-all
+        test test-model test-full test-full-model monitor monitor-live security security-live \
+        check-ram models-list models-check-new ollama-check stop-all \
+        php-up php-down php-run php-test php-lint php-shell
 
 DOCKER_DIR := docker
+PHP_TEST_DIR := docker/php-test
 SCRIPTS_DIR := scripts
 
 # Couleurs
@@ -94,7 +96,7 @@ models-light: ## Télécharger les modèles légers (~10 GB)
 	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-light" 10
 	@echo "$(CYAN)Téléchargement des modèles légers...$(RESET)"
 	ollama pull nomic-embed-text-v2-moe
-	ollama pull phi4-reasoning
+	ollama pull phi4-reasoning:plus
 	@echo "$(GREEN)✓ Modèles légers installés$(RESET)"
 
 models: ## Télécharger les modèles standards (~70 GB)
@@ -102,7 +104,7 @@ models: ## Télécharger les modèles standards (~70 GB)
 	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-standard" 70
 	@echo "$(CYAN)Téléchargement des modèles standards...$(RESET)"
 	ollama pull nomic-embed-text-v2-moe
-	ollama pull phi4-reasoning
+	ollama pull phi4-reasoning:plus
 	ollama pull codestral:22b
 	ollama pull gemma4:31b
 	ollama pull devstral-small-2
@@ -113,7 +115,7 @@ models-all: ## Télécharger TOUS les modèles (~160 GB)
 	@bash $(SCRIPTS_DIR)/check-resources.sh "pack-all" 160
 	@echo "$(CYAN)Téléchargement de tous les modèles (long)...$(RESET)"
 	ollama pull nomic-embed-text-v2-moe
-	ollama pull phi4-reasoning
+	ollama pull phi4-reasoning:plus
 	ollama pull codestral:22b
 	ollama pull gemma4:31b
 	ollama pull devstral-small-2
@@ -142,11 +144,18 @@ unload: ## Décharger tous les modèles de la RAM (libère la mémoire)
 	@bash $(SCRIPTS_DIR)/load-model.sh --unload
 
 ##@ Tests
-test: ## Tester tous les modèles un par un — rapport généré dans tests/results/
+test: ## Tester tous les modèles — prompts rapides ciblés — rapport dans tests/results/
 	@bash $(SCRIPTS_DIR)/test-models.sh
 
 test-model: ## Tester un seul modèle (usage: make test-model MODEL=codestral:22b)
 	@bash $(SCRIPTS_DIR)/test-models.sh "$(MODEL)"
+
+test-full: ## Benchmark ultime 6 behaviors — tous les modèles (long — 20-40 min)
+	@MODEL_MODE=full bash $(SCRIPTS_DIR)/test-models.sh
+
+test-full-model: ## Benchmark ultime sur un seul modèle (usage: make test-full-model MODEL=gemma4:31b)
+	@[ -n "$(MODEL)" ] || (echo "$(RED)Usage : make test-full-model MODEL=<nom>$(RESET)" && exit 1)
+	@MODEL_MODE=full bash $(SCRIPTS_DIR)/test-models.sh "$(MODEL)"
 
 ##@ Veille LLM
 models-check-new: ## 3 recherches web — derniers modèles dispo (Ollama registry + GitHub)
@@ -167,6 +176,34 @@ security-live: ## Rapport sécurité + performance en continu (30s)
 
 check-ram: ## Vérifier la RAM avant de charger un modèle (usage: make check-ram MODEL=codestral:22b SIZE=14)
 	@bash $(SCRIPTS_DIR)/check-resources.sh "$(MODEL)" "$(SIZE)"
+
+##@ Validation code PHP (Docker isolé — PHP 8.3 + PostgreSQL 16 + Redis 7 + RabbitMQ)
+php-up: ## Démarrer l'env PHP de test (PostgreSQL + Redis + RabbitMQ)
+	@echo "$(CYAN)Démarrage env PHP test...$(RESET)"
+	@cd $(PHP_TEST_DIR) && docker compose up -d --build
+	@echo "$(GREEN)✓ Env PHP prêt — code dans tests/generated/$(RESET)"
+	@echo "  PostgreSQL : localhost:5433  |  Redis : localhost:6380  |  RabbitMQ : localhost:15673"
+
+php-down: ## Arrêter l'env PHP de test
+	@cd $(PHP_TEST_DIR) && docker compose down
+	@echo "$(GREEN)✓ Env PHP arrêté$(RESET)"
+
+php-shell: ## Shell interactif dans le container PHP (pour déboguer)
+	@cd $(PHP_TEST_DIR) && docker compose run --rm php-test bash
+
+php-lint: ## Vérifier la syntaxe PHP de tout le code généré
+	@echo "$(CYAN)Lint PHP 8.3 sur tests/generated/...$(RESET)"
+	@cd $(PHP_TEST_DIR) && docker compose run --rm php-test \
+		bash -c "find /app/src -name '*.php' -exec php -l {} \; 2>&1 | grep -v 'No syntax errors' || echo 'Syntaxe OK'"
+
+php-test: ## Lancer PHPUnit dans le container (usage: make php-test ou make php-test ARGS="--filter MoneyTest")
+	@echo "$(CYAN)PHPUnit dans Docker PHP 8.3...$(RESET)"
+	@cd $(PHP_TEST_DIR) && docker compose run --rm php-test \
+		bash -c "cd /app && composer install -q && vendor/bin/phpunit $(ARGS) --colors=never"
+
+php-run: ## Commande arbitraire dans PHP (usage: make php-run CMD="php bin/console debug:router")
+	@[ -n "$(CMD)" ] || (echo "$(RED)Usage : make php-run CMD='...'$(RESET)" && exit 1)
+	@cd $(PHP_TEST_DIR) && docker compose run --rm php-test bash -c "$(CMD)"
 
 ##@ Maintenance
 update: ## Mettre à jour toutes les images Docker

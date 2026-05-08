@@ -67,7 +67,7 @@ Tout code produit ou validé ici doit respecter :
 | `codestral:22b` | Mistral 🇫🇷 | Coding quotidien PHP/Symfony/JS/Python/Bash/Java |
 | `devstral-small-2` | Mistral 🇫🇷 | Refactoring multi-fichiers, agents, Ansible (SWE-bench 65.8%) |
 | `llama3.3:70b` | Meta 🇺🇸 | Architecture, revue sécurité OWASP, K8s/RedHat |
-| `phi4-reasoning` | Microsoft 🇺🇸 | Architecture, SOLID, Java — niveau raisonnement o3-mini |
+| `phi4-reasoning:plus` | Microsoft 🇺🇸 | Architecture, SOLID, Java — niveau raisonnement o3-mini |
 | `gemma4:31b` | Google 🇺🇸 | Agents sécurité, tool-calling, ELK, context 256K |
 | `qwen3.6:27b` | Alibaba 🇨🇳 ⚠️ | Coding pur non sensible — sortie via sandbox-guard.sh |
 | `nomic-embed-text-v2-moe` | Nomic 🇺🇸 | Embeddings RAG multilingue |

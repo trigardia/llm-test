@@ -12,7 +12,7 @@ KNOWN_MODELS=(
     "codestral:22b"
     "devstral-small-2"
     "llama3.3:70b"
-    "phi4-reasoning"
+    "phi4-reasoning:plus"
     "gemma4:31b"
     "qwen3.6:27b"
     "nomic-embed-text-v2-moe"

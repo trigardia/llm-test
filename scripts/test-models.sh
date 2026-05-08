@@ -8,19 +8,21 @@ RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
 RESULTS_DIR="$(dirname "$0")/../tests/results"
+PROMPTS_DIR="$(dirname "$0")/../tests/prompts"
 mkdir -p "$RESULTS_DIR"
 REPORT="$RESULTS_DIR/rapport-$(date '+%Y%m%d-%H%M%S').md"
+BENCHMARK_PROMPT="$PROMPTS_DIR/dev-benchmark-mission.md"
 
 RAM_MARGIN_GB=20
 
 # ── Ordre des modèles (léger → lourd) ──────────────────────
-MODELS="nomic-embed-text-v2-moe phi4-reasoning codestral:22b devstral-small-2 gemma4:31b llama3.3:70b qwen3.6:27b"
+MODELS="nomic-embed-text-v2-moe phi4-reasoning:plus codestral:22b devstral-small-2 gemma4:31b llama3.3:70b qwen3.6:27b"
 
 # ── Taille en Go par modèle ─────────────────────────────────
 model_size() {
     case "$1" in
         nomic-embed-text-v2-moe) echo 1  ;;
-        phi4-reasoning)          echo 9  ;;
+        phi4-reasoning:plus)          echo 9  ;;
         codestral:22b)           echo 14 ;;
         devstral-small-2)        echo 15 ;;
         gemma4:31b)              echo 20 ;;
@@ -32,11 +34,19 @@ model_size() {
 }
 
 # ── Prompt de test par modèle ───────────────────────────────
+# MODE=quick  → prompt ciblé rapide (défaut pour make test)
+# MODE=full   → benchmark ultime 6 behaviors (make test-full)
+MODEL_MODE="${MODEL_MODE:-quick}"
+
 model_prompt() {
+    if [ "$MODEL_MODE" = "full" ] && [ -f "$BENCHMARK_PROMPT" ]; then
+        cat "$BENCHMARK_PROMPT"
+        return
+    fi
     case "$1" in
         nomic-embed-text-v2-moe)
             echo "Stack LLM local sécurisée sur Apple Silicon M5 Max — Symfony Java K8s ELK" ;;
-        phi4-reasoning)
+        phi4-reasoning:plus)
             echo "Cite 3 principes SOLID appliqués à une API REST Java Spring Boot. Réponse courte." ;;
         codestral:22b)
             echo "Écris une fonction PHP qui sanitise une entrée utilisateur contre les injections SQL. Réponse courte." ;;
@@ -67,14 +77,27 @@ get_available_ram_gb() {
 }
 
 stop_all_models() {
-    local loaded
+    local loaded ram_before ram_after waited
     loaded=$(ollama ps 2>/dev/null | tail -n +2 | awk '{print $1}' | grep -v "^$" || true)
     if [ -n "$loaded" ]; then
-        echo -e "  ${YELLOW}Déchargement RAM...${RESET}"
+        ram_before=$(get_available_ram_gb)
+        echo -e "  ${YELLOW}Déchargement RAM... (avant : ${ram_before} Go dispo)${RESET}"
         echo "$loaded" | while IFS= read -r m; do
             [ -z "$m" ] && continue
-            ollama stop "$m" 2>/dev/null && echo -e "    ${GREEN}✓${RESET} $m libéré"
+            ollama stop "$m" 2>/dev/null && echo -e "    ${GREEN}✓${RESET} $m arrêté"
         done
+        # Attendre que ollama ps soit vide (max 15s)
+        waited=0
+        while [ "$waited" -lt 15 ]; do
+            sleep 1
+            waited=$(( waited + 1 ))
+            [ -z "$(ollama ps 2>/dev/null | tail -n +2 | awk '{print $1}' | grep -v '^$' || true)" ] && break
+        done
+        sleep 2  # laisser macOS reclaimer la RAM physique
+        ram_after=$(get_available_ram_gb)
+        echo -e "  ${GREEN}✓ RAM libérée : ${ram_before} → ${ram_after} Go disponibles${RESET}"
+    else
+        echo -e "  ${GREEN}✓ Aucun modèle en RAM — prêt${RESET}"
     fi
 }
 
@@ -109,11 +132,21 @@ run_test() {
         return
     fi
 
+    # Vérification finale : aucun autre modèle en RAM
+    local active_models
+    active_models=$(ollama ps 2>/dev/null | tail -n +2 | awk '{print $1}' | grep -v "^$" || true)
+    if [ -n "$active_models" ]; then
+        echo -e "  ${RED}✗ Modèle(s) encore en RAM : $active_models — test annulé pour isolation${RESET}"
+        log "\n> ✗ Isolation RAM non garantie — test ignoré\n"
+        return
+    fi
+
     echo -e "\n${CYAN}┌── $model ──────────────────────────────────────────${RESET}"
-    echo -e "${CYAN}│  RAM dispo : ${available} Go | Taille : ~${size} Go${RESET}"
-    echo -e "${CYAN}│  Prompt : $prompt${RESET}"
+    echo -e "${CYAN}│  RAM dispo : ${available} Go | Taille : ~${size} Go | Modèles en RAM : aucun ✓${RESET}"
+    echo -e "${CYAN}│  Mode : ${MODEL_MODE}${RESET}"
     echo -e "${CYAN}└────────────────────────────────────────────────────${RESET}\n"
 
+    log "\n**RAM avant test** : ${available} Go | **Mode** : ${MODEL_MODE}\n"
     log "\n**Prompt** : \`$prompt\`\n"
 
     # Cas spécial : embedding
@@ -133,13 +166,40 @@ print(f'Vecteur {len(v)} dimensions — min={min(v):.4f} max={max(v):.4f}')
         return
     fi
 
-    # Test chat standard
+    # Test chat via API (pas de ollama run — sortie propre sans ANSI)
+    local timeout_s=600
+    [ "$MODEL_MODE" = "full" ] && timeout_s=1200
+    local payload
+    payload=$(python3 -c "
+import json, sys
+print(json.dumps({'model': sys.argv[1], 'prompt': sys.argv[2], 'stream': False}))
+" "$model" "$prompt" 2>/dev/null)
+
     start=$SECONDS
-    output=$(ollama run "$model" "$prompt" 2>/dev/null || echo "ERREUR")
+    local raw
+    raw=$(curl -sf --max-time "$timeout_s" \
+        -X POST http://localhost:11434/api/generate \
+        -H "Content-Type: application/json" \
+        -d "$payload" 2>/dev/null || echo "ERREUR_CURL")
     duration=$(( SECONDS - start ))
 
-    if [ "$output" = "ERREUR" ]; then
-        echo -e "${RED}✗ Erreur lors du test de $model${RESET}"
+    if [ "$raw" = "ERREUR_CURL" ] || [ -z "$raw" ]; then
+        echo -e "${RED}✗ Erreur API pour $model${RESET}"
+        log "\n**Statut** : ❌ ÉCHEC API | **Durée** : ${duration}s\n"
+        return
+    fi
+
+    output=$(echo "$raw" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('response', 'ERREUR_JSON'))
+except Exception as e:
+    print('ERREUR_PARSE: ' + str(e))
+" 2>/dev/null || echo "ERREUR")
+
+    if [[ "$output" == ERREUR* ]]; then
+        echo -e "${RED}✗ $output${RESET}"
         log "\n**Statut** : ❌ ÉCHEC | **Durée** : ${duration}s\n"
     else
         echo -e "${GREEN}✓ Réponse reçue en ${duration}s${RESET}\n"
@@ -179,16 +239,39 @@ run_qwen_test() {
     echo -e "${CYAN}│  Prompt : $prompt${RESET}"
     echo -e "${CYAN}└────────────────────────────────────────────────────${RESET}\n"
 
+    local timeout_s=600
+    [ "$MODEL_MODE" = "full" ] && timeout_s=1200
+    local payload
+    payload=$(python3 -c "
+import json, sys
+print(json.dumps({'model': sys.argv[1], 'prompt': sys.argv[2], 'stream': False}))
+" "$model" "$prompt" 2>/dev/null)
+
     start=$SECONDS
-    output=$(ollama run "$model" "$prompt" 2>/dev/null \
-        | bash "$(dirname "$0")/sandbox-guard.sh" 2>/dev/null || echo "ERREUR")
+    local raw
+    raw=$(curl -sf --max-time "$timeout_s" \
+        -X POST http://localhost:11434/api/generate \
+        -H "Content-Type: application/json" \
+        -d "$payload" 2>/dev/null || echo "ERREUR_CURL")
     duration=$(( SECONDS - start ))
 
-    if [ "$output" = "ERREUR" ]; then
-        echo -e "${RED}✗ Erreur${RESET}"
+    output=$(echo "$raw" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    print(d.get('response', 'ERREUR_JSON'))
+except:
+    print('ERREUR_PARSE')
+" 2>/dev/null || echo "ERREUR")
+
+    # Filtre sandbox-guard sur la sortie
+    output=$(echo "$output" | bash "$(dirname "$0")/sandbox-guard.sh" 2>/dev/null || echo "ERREUR_SANDBOX")
+
+    if [[ "$output" == ERREUR* ]]; then
+        echo -e "${RED}✗ $output${RESET}"
         log "\n**Statut** : ❌ ÉCHEC | **Durée** : ${duration}s\n"
     else
-        echo -e "${GREEN}✓ Réponse reçue en ${duration}s (filtrée)${RESET}\n"
+        echo -e "${GREEN}✓ Réponse reçue en ${duration}s (filtrée sandbox-guard)${RESET}\n"
         echo "$output"
         log "\n**Réponse** :\n\`\`\`\n$output\n\`\`\`\n"
         log "**Durée** : ${duration}s | **Statut** : ✅ OK\n"
