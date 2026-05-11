@@ -95,7 +95,7 @@ Quitter les logs : `Ctrl+C`
 ## qwen3.6:27b — Sandbox sécurisé
 
 ### `make qwen-pull`
-Crée le réseau Docker isolé `sandbox-net` et démarre le container Kimi sur le port **11435**.
+Crée le réseau Docker isolé `sandbox-net` et démarre le container qwen3.6:27b sur le port **11435**.
 
 ```bash
 make qwen-pull
@@ -105,10 +105,10 @@ make qwen-pull
 ```
 
 ### `ollama rm qwen3.6:27b`
-Arrête et supprime le container Kimi. Le réseau sandbox reste.
+Arrête et supprime le container qwen3.6:27b. Le réseau sandbox reste.
 
 ### `ollama list`
-Affiche l'état du container Kimi (nom, statut, port).
+Affiche l'état du container qwen3.6:27b (nom, statut, port).
 
 ---
 
@@ -146,7 +146,7 @@ Rapport sécurité + performance en snapshot :
 |-------------|--------|
 | Ports réseau | Vérifie que tous les ports sont sur `127.0.0.1` |
 | Containers privileged | Aucun container ne doit être en mode privileged |
-| Isolation Kimi | Kimi doit être sur `sandbox-net` uniquement |
+| Isolation qwen3.6:27b | qwen3.6:27b doit être sur `sandbox-net` uniquement |
 | Fichier `.env` | Ne doit pas apparaître dans git |
 | Processus suspects | Connexions sortantes inattendues |
 | Charge CPU | Alerte si load > 80% des cœurs |

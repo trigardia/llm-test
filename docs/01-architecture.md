@@ -36,9 +36,9 @@
 │ ─ ─ ─ ─ ─ ─ ─ SANDBOX ISOLÉ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─ ─  │
 │                                                             │
 │   ┌─────────────────────────────────┐                       │
-│   │  KIMI K2.6 — Port 11435        │                       │
+│   │  qwen3.6:27b — Port 11435      │                       │
 │   │  Réseau : sandbox-net (isolé) │                       │
-│   │  Sortie filtrée par kimi-guard │                       │
+│   │  Sortie filtrée par sandbox-guard│                      │
 │   └─────────────────────────────────┘                       │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -63,7 +63,7 @@ Isolation, reproductibilité, mise à jour facile (`docker compose pull`), aucun
 |--------|------|-------|
 | `llm-frontend` | bridge | Open WebUI ↔ localhost |
 | `llm-search` | bridge | Open WebUI ↔ SearXNG (interne) |
-| `sandbox-net` | bridge internal | Isolation totale Kimi |
+| `sandbox-net` | bridge internal | Isolation totale qwen3.6:27b |
 
 ## Ports exposés
 
@@ -71,5 +71,7 @@ Isolation, reproductibilité, mise à jour facile (`docker compose pull`), aucun
 |------|---------|------------------|
 | 11434 | Ollama | localhost uniquement |
 | 3000 | Open WebUI | localhost uniquement |
-| 11435 | Kimi (Docker) | localhost uniquement |
+| 11435 | qwen3.6:27b (sandbox Docker) | localhost uniquement |
 | 8080 | SearXNG | Interne Docker uniquement |
+
+> **Note** : Kimi K2.6 (Moonshot AI) est un service **cloud uniquement** — non utilisé dans ce stack local.

@@ -12,7 +12,7 @@
 | 01 | [Architecture](01-architecture.md) | Vue d'ensemble, schémas, choix techniques |
 | 02 | [Installation](02-installation.md) | Guide pas à pas, prérequis, démarrage |
 | 03 | [Modèles LLM](03-modeles.md) | Catalogue, benchmarks, RAM, cas d'usage |
-| 04 | [Sécurité](04-securite.md) | Politique, sandbox Kimi, règles absolues |
+| 04 | [Sécurité](04-securite.md) | Politique, sandbox qwen3.6:27b, règles absolues |
 | 05 | [Interfaces](05-interfaces.md) | Open WebUI, SearXNG — configuration et usage |
 | 06 | [Usage quotidien](06-usage.md) | Commandes, workflows, bonnes pratiques |
 | 07 | [Makefile](07-makefile.md) | Toutes les commandes `make` documentées |

@@ -68,7 +68,7 @@ ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
 ```
 llm-frontend  →  Open WebUI ↔ localhost
 llm-search    →  Open WebUI ↔ SearXNG (interne)
-sandbox-net  →  Kimi isolé (--internal)
+sandbox-net  →  qwen3.6:27b isolé (--internal)
 ```
 
 ---

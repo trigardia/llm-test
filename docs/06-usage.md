@@ -39,14 +39,14 @@ ollama stop codestral:22b
 ## Workflow qwen3.6:27b (sandbox obligatoire)
 
 ```bash
-# Vérifier que le container Kimi tourne
+# Vérifier que le container sandbox qwen3.6:27b tourne
 docker ps | grep ollama-sandbox
 
-# Utiliser Kimi avec le filtre de sécurité
+# Utiliser qwen3.6:27b avec le filtre de sécurité
 ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
-**Rappel** : Ne jamais envoyer à Kimi des secrets, tokens, code propriétaire ou chemins sensibles.
+**Rappel** : Ne jamais envoyer à qwen3.6:27b des secrets, tokens, code propriétaire ou chemins sensibles.
 
 ---
 

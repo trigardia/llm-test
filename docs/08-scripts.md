@@ -29,7 +29,7 @@ Filtre **obligatoire** appliqué à toute sortie du modèle qwen3.6:27b. Détect
 ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
 ```
 
-### Workflow complet Kimi
+### Workflow complet qwen3.6:27b
 ```
 Prompt → qwen3.6:27b (port 11435)
               ↓
@@ -130,7 +130,7 @@ Audit combiné sécurité + performance de toute la stack. Détecte les mauvaise
 |-------------|---------------------|
 | Ports réseau | Tous les ports doivent écouter sur `127.0.0.1`, jamais `0.0.0.0` |
 | Containers privileged | Aucun container ne doit tourner en mode `privileged` |
-| Isolation Kimi | Le container `ollama-sandbox` doit être sur `sandbox-net` uniquement |
+| Isolation qwen3.6:27b | Le container `ollama-sandbox` doit être sur `sandbox-net` uniquement |
 | Secrets git | `docker/.env` ne doit pas apparaître dans `git status` |
 | Connexions sortantes | Détecte les connexions réseau inattendues depuis les containers |
 
@@ -139,7 +139,7 @@ Audit combiné sécurité + performance de toute la stack. Détecte les mauvaise
 | Vérification | Ce qui est contrôlé |
 |-------------|---------------------|
 | Charge CPU | Load average vs nombre de cœurs (alerte > 80%) |
-| Latence API Ollama | Temps de réponse sur port 11434 (standard) et 11435 (Kimi) |
+| Latence API Ollama | Temps de réponse sur port 11434 (standard) et 11435 (sandbox) |
 | Stats Docker | CPU et RAM consommés par container |
 | Espace disque | Alerte si espace libre < 20 Go |
 
@@ -199,6 +199,6 @@ Une fois par semaine — intégrable dans une tâche cron ou un pipeline CI.
 ```bash
 chmod +x scripts/*.sh
 
-# Ou via Makefile lors du setup Kimi :
+# Ou via Makefile lors du setup qwen3.6:27b :
 make qwen-pull
 ```

@@ -93,7 +93,7 @@ Voir [03-modeles.md](03-modeles.md) pour l'ordre recommandé et les commandes.
 # Créer le réseau isolé
 docker network create --driver bridge --internal sandbox-net
 
-# Démarrer le container Kimi
+# Démarrer le container sandbox qwen3.6:27b
 docker run -d --name ollama-sandbox --network sandbox-net \
   --cap-drop ALL --read-only \
   --tmpfs /tmp:size=512m --tmpfs /root/.ollama:size=100g \
