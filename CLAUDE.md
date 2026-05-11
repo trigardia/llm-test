@@ -43,14 +43,36 @@ LLM/
 | ❌ Exclu | DeepSeek, modèles cloud chinois non locaux | Ne jamais suggérer |
 
 ### qwen3.6:27b — protocole obligatoire
+
 - Tourne sur le port **11434** (Ollama natif, pas de Docker sandbox)
 - **Toute sortie doit passer par `scripts/sandbox-guard.sh` avant usage**
-- Interdit sur : secrets, tokens, credentials, code propriétaire
+- Interdit sur : secrets, tokens, credentials, code propriétaire, chemins hors dossier de travail
 - Workflow : `qwen3.6:27b → sandbox-guard.sh → validation humaine → commit`
 
 ```bash
 ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
+# exit 0 = OK | exit 1 = SUSPECT (validation renforcée) | exit 2 = BLOQUÉ (ne pas utiliser)
 ```
+
+**sandbox-guard.sh v2 — 13 couches de détection (sources 2025-2026) :**
+
+| Couche | Menace |
+|--------|--------|
+| 1 | Stéganographie Unicode — ASCII smuggling U+E0000, zero-width, homoglyphes cyrilliques |
+| 2 | Encodage & obfuscation — base64 blobs, shellcode hex, eval+decode |
+| 3 | Injection shell — reverse shells, fork bomb, curl\|bash, persistence cron |
+| 4 | Exfiltration réseau — ngrok, webhook.site, DNS exfil, netcat |
+| 5 | Secrets & credentials — API keys (Anthropic/GitHub/AWS/Google), clés privées |
+| 6 | Filesystem sensible — /etc/shadow, .ssh, keychain macOS, /proc/keys |
+| 7 | Exécution de code — Python RCE, pickle, YAML unsafe, PHP passthru, Java Runtime.exec |
+| 8 | Artifacts d'injection — DAN mode, Mastermind multi-turn (95% ASR), temporal confusion |
+| 9 | Supply chain — typosquatting pip/npm, index HTTP, postinstall hooks malveillants |
+| 10 | Évasion container — docker.sock, cgroup escape, runc CVE-2025-31133/52881 |
+| 11 | Entropie élevée — payloads chiffrés > 4.8 bits/char (via Python Shannon entropy) |
+| 12 | URLs malveillantes — C2 connus, pastebin raw, data URI, javascript: |
+| 13 | Cryptomining — xmrig, stratum, monero |
+
+Logs : `~/.sandbox-guard/logs/` — doc complète : `docs/08-scripts.md`
 
 ### Qualité du code généré
 Tout code produit ou validé ici doit respecter :
