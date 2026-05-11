@@ -77,6 +77,51 @@ Mission : microservice Symfony 7 fintech, 6 behaviors experts (DDD, SOLID, Sécu
 
 ---
 
+### sandbox-guard.sh — v2 (13 couches)
+
+Filtre de sécurité niveau pentesteur. Basé sur la recherche offensive 2025-2026.
+
+```bash
+ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
+# exit 0 = OK · exit 1 = SUSPECT · exit 2 = BLOQUÉ
+```
+
+```
+┌────────┬────────────────────────────────────────────────────────────────────┬─────────────────────────────────────┐
+│ Couche │                          Menace couverte                           │               Source                │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 1      │ ASCII smuggling U+E0000, homoglyphes cyrilliques                   │ arxiv 2603.00164, CamoLeak CVSS 9.6 │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 2      │ Base64 blobs, shellcode hex, eval+decode                           │ OWASP LLM01:2025                    │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 3      │ Reverse shells, fork bomb, curl|bash, persistence                  │ Red team 2026                       │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 4      │ ngrok, webhook.site, DNS exfil, netcat                             │ LLM Guard (Protect AI)              │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 5      │ API keys Anthropic/GitHub/AWS/Google, private keys                 │ Secrets scanners 2026               │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 6      │ /etc/shadow, .ssh, keychain macOS, /proc/keys                      │ Pentest OWASP                       │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 7      │ Python RCE, pickle, YAML unsafe, PHP passthru                      │ OWASP Top10                         │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 8      │ DAN mode, Mastermind multi-turn (95% ASR Qwen), temporal confusion │ arxiv 2601.05445, JBFuzz 99% ASR    │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 9      │ Typosquatting pip/npm, index HTTP, postinstall hooks               │ Supply chain 2026                   │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 10     │ docker.sock, cgroup escape, runc CVE-2025-31133/52881              │ Blaxel container escape 2026        │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 11     │ Entropie > 4.8 bits/char (payloads chiffrés)                       │ Steganography research 2025         │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 12     │ C2 connus, pastebin raw, data URI, javascript:                     │ NVIDIA Agentic AI security          │
+├────────┼────────────────────────────────────────────────────────────────────┼─────────────────────────────────────┤
+│ 13     │ xmrig, stratum, monero                                             │ Threat intel 2026                   │
+└────────┴────────────────────────────────────────────────────────────────────┴─────────────────────────────────────┘
+```
+
+Logs persistants dans `~/.sandbox-guard/logs/`. Documentation complète : `docs/08-scripts.md`.
+
+---
+
 ### devstral-small-2 · Mistral AI 🇫🇷
 > **Missions autonomes multi-fichiers — le meilleur du stack**
 
@@ -131,15 +176,17 @@ ollama run devstral-small-2
 
 **Protocole d'usage :**
 ```bash
+# Toujours passer par sandbox-guard (exit 0=OK, 1=SUSPECT, 2=BLOQUÉ)
 ollama run qwen3.6:27b "question" | ./scripts/sandbox-guard.sh
-# ou via make :
+
 make load MODEL=qwen3.6:27b
 ```
 
 **Interdit avec qwen :**
-- ❌ Tokens, clés API, secrets
+- ❌ Tokens, clés API, secrets, credentials
 - ❌ Code propriétaire ou confidentiel
 - ❌ Fichiers de configuration avec credentials
+- ❌ Chemins hors du dossier de travail courant
 
 ---
 
