@@ -1,0 +1,5 @@
+model,sample,score_20,elapsed_sec,sandbox_exit,date
+qwen3.6:27b,A01-broken-access-control.php,N/A,44,0,2026-05-16 07:06:28
+qwen3.6:27b,A02-cryptographic-failures.php,18,54,0,2026-05-16 07:07:22
+qwen3.6:27b,A03-injection.php,N/A,52,0,2026-05-16 07:08:14
+qwen3.6:27b,A04-insecure-design.php,18,55,0,2026-05-16 07:09:09

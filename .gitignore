@@ -4,6 +4,15 @@ drafts/
 # Données générées
 tests/generated/
 
+# Rapports de benchmark (outputs temporaires)
+tests/results/
+tests/security/results/
+tests/security/analysis/
+tests/analysis/results/
+tests/analysis/analysis/
+tests/perf/results/
+tests/scoring/
+
 # Claude interne
 .claude/
 
