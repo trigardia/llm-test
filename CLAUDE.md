@@ -35,6 +35,21 @@ LLM/
 
 ## Règles absolues
 
+### Samples de sécurité — Clés et secrets de test
+Tout fichier dans `tests/security/samples/` contient des vulnérabilités intentionnelles.
+**Règle obligatoire** : toutes les clés/credentials dans ces fichiers doivent utiliser un format **explicitement faux** pour éviter le blocage GitHub Secret Scanning :
+
+| ❌ Interdit | ✅ Obligatoire |
+|------------|--------------|
+| `FAKE_STRIPE_KEY_FOR_SECURITY_TESTING_ONLY` | `sk_live_FAKE_KEY_FOR_SECURITY_TESTING_ONLY` |
+| `AKIAIOSFODNN7EXAMPLE` | `FAKE_AWS_ACCESS_KEY_FOR_TESTING` |
+| `ghp_xxxxxxxxxxxxxxxxxxxx` | `FAKE_GITHUB_TOKEN_FOR_TESTING_ONLY` |
+
+Format imposé : préfixer par `FAKE_` ou suffixer par `_FOR_SECURITY_TESTING_ONLY`.
+Ne jamais utiliser des patterns qui ressemblent à de vraies clés (longueur, format, préfixe réel).
+
+---
+
 ### Sécurité des modèles
 | Niveau | Origine | Règle |
 |--------|---------|-------|
