@@ -41,9 +41,9 @@ Tout fichier dans `tests/security/samples/` contient des vulnérabilités intent
 
 | ❌ Interdit | ✅ Obligatoire |
 |------------|--------------|
-| `FAKE_STRIPE_KEY_FOR_SECURITY_TESTING_ONLY` | `sk_live_FAKE_KEY_FOR_SECURITY_TESTING_ONLY` |
-| `AKIAIOSFODNN7EXAMPLE` | `FAKE_AWS_ACCESS_KEY_FOR_TESTING` |
-| `ghp_xxxxxxxxxxxxxxxxxxxx` | `FAKE_GITHUB_TOKEN_FOR_TESTING_ONLY` |
+| Clé Stripe au format réel (`sk_live_...`) | `FAKE_STRIPE_KEY_FOR_SECURITY_TESTING_ONLY` |
+| Clé AWS au format réel (`AKIA...`) | `FAKE_AWS_ACCESS_KEY_FOR_TESTING` |
+| Token GitHub au format réel (`ghp_...`) | `FAKE_GITHUB_TOKEN_FOR_TESTING_ONLY` |
 
 Format imposé : préfixer par `FAKE_` ou suffixer par `_FOR_SECURITY_TESTING_ONLY`.
 Ne jamais utiliser des patterns qui ressemblent à de vraies clés (longueur, format, préfixe réel).
