@@ -7,8 +7,8 @@ set -euo pipefail
 RED='\033[0;31m'; YELLOW='\033[1;33m'; GREEN='\033[0;32m'
 CYAN='\033[0;36m'; BOLD='\033[1m'; RESET='\033[0m'
 
-RESULTS_DIR="$(dirname "$0")/../tests/results"
-PROMPTS_DIR="$(dirname "$0")/../tests/prompts"
+RESULTS_DIR="$(dirname "$0")/../tests/perf/results"
+PROMPTS_DIR="$(dirname "$0")/../tests/perf/prompts"
 mkdir -p "$RESULTS_DIR"
 REPORT="$RESULTS_DIR/rapport-$(date '+%Y%m%d-%H%M%S').md"
 BENCHMARK_PROMPT="$PROMPTS_DIR/dev-benchmark-mission.md"

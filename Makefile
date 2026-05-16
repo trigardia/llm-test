@@ -1,9 +1,11 @@
 .PHONY: help start stop restart status logs logs-webui logs-search update \
-        models models-light models-all qwen-pull clean \
+        models models-light models-all qwen-pull foundation-sec-pull clean \
         load unload switch \
         test test-model test-full test-full-model monitor monitor-live security security-live \
         check-ram models-list models-check-new ollama-check stop-all \
-        php-up php-down php-run php-test php-lint php-shell
+        php-up php-down php-run php-test php-lint php-shell \
+        security-test security-test-model security-test-sample security-test-one security-list \
+        decide decide-weights
 
 DOCKER_DIR := docker
 PHP_TEST_DIR := docker/php-test
@@ -123,6 +125,18 @@ models-all: ## Télécharger TOUS les modèles (~160 GB)
 	ollama pull qwen3.6:27b
 	@echo "$(GREEN)✓ Tous les modèles installés$(RESET)"
 
+foundation-sec-pull: ## Télécharger Foundation-Sec-8B-Reasoning depuis fdtn-ai (Cisco officiel HuggingFace)
+	@echo "$(CYAN)Vérification huggingface-hub...$(RESET)"
+	@command -v hf >/dev/null 2>&1 || pip3 install huggingface-hub --break-system-packages -q
+	@echo "$(CYAN)Téléchargement depuis fdtn-ai/Foundation-Sec-8B-Reasoning-Q8_0-GGUF (Cisco officiel)...$(RESET)"
+	@mkdir -p ~/models/foundation-sec-reasoning
+	hf download fdtn-ai/Foundation-Sec-8B-Reasoning-Q8_0-GGUF \
+		--local-dir ~/models/foundation-sec-reasoning
+	@echo "$(CYAN)Création du modèle Ollama...$(RESET)"
+	@printf 'FROM %s/models/foundation-sec-reasoning/foundation-sec-8b-reasoning-q8_0.gguf\nPARAMETER temperature 0.1\nPARAMETER num_ctx 8192\n' "$$HOME" | ollama create foundation-sec-reasoning -f -
+	@echo "$(GREEN)✓ foundation-sec-reasoning installé dans Ollama$(RESET)"
+	@echo "$(GREEN)✓ Source : huggingface.co/fdtn-ai (Cisco officiel — aucun port communautaire)$(RESET)"
+
 qwen-pull: ## Télécharger qwen3.6:27b (⚠ modèle Alibaba — sortie via sandbox-guard.sh)
 	@echo "$(CYAN)Téléchargement de qwen3.6:27b...$(RESET)"
 	@bash $(SCRIPTS_DIR)/check-resources.sh "qwen3.6:27b" 24
@@ -156,6 +170,39 @@ test-full: ## Benchmark ultime 6 behaviors — tous les modèles (long — 20-40
 test-full-model: ## Benchmark ultime sur un seul modèle (usage: make test-full-model MODEL=gemma4:31b)
 	@[ -n "$(MODEL)" ] || (echo "$(RED)Usage : make test-full-model MODEL=<nom>$(RESET)" && exit 1)
 	@MODEL_MODE=full bash $(SCRIPTS_DIR)/test-models.sh "$(MODEL)"
+
+##@ R&D Décisionnel — Score consolidé
+decide: ## Score pondéré final (perf + security + ...) → recommandation GitLab CI
+	@python3 tests/scoring/consolidated-score.py
+
+decide-weights: ## Voir/modifier la pondération des dimensions (éditer tests/scoring/consolidated-score.py)
+	@python3 -c "import tests.scoring.consolidated-score" 2>/dev/null || \
+	  grep -A6 'WEIGHTS' tests/scoring/consolidated-score.py | head -8
+
+##@ Security Benchmark (Red Team DevSecOps — GitLab CI)
+security-test: ## Benchmark OWASP 2025 — tous modèles × tous samples (make security-test MODEL=xxx SAMPLE=yyy)
+	@bash $(SCRIPTS_DIR)/security-test.sh
+
+security-test-model: ## Benchmark sécurité sur un seul modèle (usage: make security-test-model MODEL=codestral:22b)
+	@[ -n "$(MODEL)" ] || (echo "$(RED)Usage : make security-test-model MODEL=<nom>$(RESET)" && exit 1)
+	@MODEL="$(MODEL)" bash $(SCRIPTS_DIR)/security-test.sh
+
+security-test-sample: ## Tester tous les modèles sur un sample OWASP (usage: make security-test-sample SAMPLE=A03-injection.php)
+	@[ -n "$(SAMPLE)" ] || (echo "$(RED)Usage : make security-test-sample SAMPLE=<fichier>$(RESET)" && exit 1)
+	@SAMPLE="$(SAMPLE)" bash $(SCRIPTS_DIR)/security-test.sh
+
+security-test-one: ## Un modèle + un sample (usage: make security-test-one MODEL=llama3.3:70b SAMPLE=A03-injection.php)
+	@[ -n "$(MODEL)" ] || (echo "$(RED)Usage : make security-test-one MODEL=<nom> SAMPLE=<fichier>$(RESET)" && exit 1)
+	@[ -n "$(SAMPLE)" ] || (echo "$(RED)Usage : make security-test-one MODEL=<nom> SAMPLE=<fichier>$(RESET)" && exit 1)
+	@MODEL="$(MODEL)" SAMPLE="$(SAMPLE)" bash $(SCRIPTS_DIR)/security-test.sh
+
+security-list: ## Lister tous les fichiers de vulnérabilités disponibles
+	@echo "\n$(CYAN)── Samples OWASP 2025 disponibles ──────────────────────$(RESET)"
+	@find tests/security/samples -type f | sort | awk '{printf "  %s\n", $$1}'
+	@echo "\n$(CYAN)── Rapports générés ─────────────────────────────────────$(RESET)"
+	@find tests/security/results -name "*.md" 2>/dev/null | sort | awk '{printf "  %s\n", $$1}' || echo "  Aucun rapport"
+	@echo "\n$(CYAN)── Scores CSV ───────────────────────────────────────────$(RESET)"
+	@find tests/security/analysis -name "*.csv" 2>/dev/null | sort | tail -5 | awk '{printf "  %s\n", $$1}' || echo "  Aucun score"
 
 ##@ Veille LLM
 models-check-new: ## 3 recherches web — derniers modèles dispo (Ollama registry + GitHub)
