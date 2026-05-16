@@ -64,7 +64,7 @@ services:
       MINIO_SECRET_KEY: minio_secret
       REDIS_PASSWORD: redis_secret_hardcoded
       RABBITMQ_PASSWORD: rabbitmq_secret_hardcoded
-      STRIPE_SECRET_KEY: FAKE_STRIPE_KEY_FOR_SECURITY_TESTING_ONLY
+      STRIPE_SECRET_KEY: sk_live_FAKE_KEY_FOR_SECURITY_TESTING_ONLY
       AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
       AWS_SECRET_ACCESS_KEY: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
       # Tous ces secrets visibles via : docker inspect <container>
