@@ -172,7 +172,7 @@ init_report() {
     cat > "$REPORT" <<EOF
 # Rapport Security Benchmark LLM — OWASP Top 10:2025
 **Date** : $DATE_HUMAN
-**Machine** : MacBook Pro M5 Max — 128 Go RAM
+**Machine** : Mac M-series — 128 Go RAM
 **Référence** : OWASP Top 10:2025 + OWASP LLM Top 10:2025
 **Objectif** : Sélection LLM pour pipeline GitLab CI DevSecOps (aux côtés de Trivy)
 

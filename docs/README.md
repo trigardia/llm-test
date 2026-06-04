@@ -1,6 +1,6 @@
 # Documentation — Stack LLM Local
 
-> Infrastructure LLMs locaux sécurisée sur MacBook Pro M5 Max (128 Go RAM)
+> Infrastructure LLMs locaux sécurisée sur Mac M-series (128 Go RAM)
 > Stack : Ollama · Open WebUI · SearXNG · Docker
 
 ---
@@ -24,7 +24,7 @@
 
 | Composant | Détail |
 |-----------|--------|
-| Machine | MacBook Pro M5 Max |
+| Machine | Mac M-series |
 | RAM | 128 Go (mémoire unifiée) |
 | OS | macOS |
 | Runtime LLM | Ollama (natif macOS) |

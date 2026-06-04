@@ -1,5 +1,5 @@
 # Security Benchmark LLM — Analyse comparative OWASP 2025
-**Date** : 2026-05-16 | **Machine** : MacBook Pro M5 Max — 128 Go RAM
+**Date** : 2026-05-16 | **Machine** : Mac M-series — 128 Go RAM
 **Référence** : OWASP Top 10:2025 + OWASP LLM Top 10:2025
 **Objectif** : Sélection LLM pour pipeline GitLab CI DevSecOps (aux côtés de Trivy)
 **Samples** : 32 fichiers (A01–A10 + AXX avancés) · PHP, Python, JS, Java, Bash, TypeScript

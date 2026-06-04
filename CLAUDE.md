@@ -14,7 +14,7 @@ Ne jamais se baser sur la mémoire interne de Claude (cutoff août 2025) ni sur 
 
 ## Contexte
 
-Ce projet gère la sélection, l'installation et la sécurisation des **LLMs locaux via Ollama** sur le MacBook Pro de Zied (M5 Max, 128 Go RAM). Stack cible : Symfony · JavaScript · React · Node.js · Python · Bash · Java · Linux · RedHat · Ansible · K8s · ELK · Redis · Pentest.
+Ce projet gère la sélection, l'installation et la sécurisation des **LLMs locaux via Ollama** sur le Mac M-series (128 Go RAM). Stack cible : Symfony · JavaScript · React · Node.js · Python · Bash · Java · Linux · RedHat · Ansible · K8s · ELK · Redis · Pentest.
 
 Un seul modèle chargé en RAM à la fois — chargement à la demande via `make load MODEL=<nom>`.
 

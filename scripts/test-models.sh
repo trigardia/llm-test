@@ -284,7 +284,7 @@ MODEL_ARG="${1:-}"
 cat > "$REPORT" << EOF
 # Rapport de tests — Modèles LLM
 **Date** : $(date '+%Y-%m-%d %H:%M:%S')
-**Machine** : MacBook Pro M5 Max — 128 Go RAM
+**Machine** : Mac M-series — 128 Go RAM
 **Mode** : Un modèle chargé à la fois — marge ${RAM_MARGIN_GB} Go
 EOF
 

@@ -1,7 +1,7 @@
 # Benchmark LLM Local — Round 1 : codestral:22b vs devstral-small-2
 
 **Date** : 2026-05-08  
-**Machine** : MacBook Pro M5 Max — 128 Go RAM unifiée  
+**Machine** : Mac M-series — 128 Go RAM unifiée  
 **Environnement** : Ollama local (port 11434) — modèle seul en RAM, isolation garantie  
 **Benchmark** : Mission microservice Symfony 7 fintech — scoring de risque transactionnel (5 000 TPS, p99 < 100ms)
 
@@ -847,12 +847,12 @@ C   llama3.3:70b        ████████░░░░░░░░░░�
 
 ---
 
-*Benchmark conduit par Zied Jlassi — DevSecOps — MacBook Pro M5 Max 128 Go*  
+*Benchmark conduit par Zied Jlassi — DevSecOps — Mac M-series 128 Go*  
 *Stack : Ollama local · Symfony 7 · PHP 8.3 · Redis 7 · PostgreSQL 16 · RabbitMQ · OpenTelemetry*  
 *Méthodologie : isolation RAM garantie — un seul modèle en mémoire par test · sortie qwen filtrée sandbox-guard.sh*
 
 ---
 
-*Benchmark conduit par Zied Jlassi — DevSecOps — MacBook Pro M5 Max 128 Go*  
+*Benchmark conduit par Zied Jlassi — DevSecOps — Mac M-series 128 Go*  
 *Stack : Ollama local · Symfony 7 · PHP 8.3 · Redis 7 · PostgreSQL 16 · RabbitMQ · OpenTelemetry*  
 *Méthodologie : isolation RAM garantie — un seul modèle en mémoire par test*

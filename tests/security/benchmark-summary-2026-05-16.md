@@ -1,5 +1,5 @@
 # 🔐 Security Benchmark LLM — OWASP Top 10:2025
-**2026-05-16** · MacBook Pro M5 Max 128 Go · 7 modèles · 32 samples · PHP/Python/JS/Java/Bash/TypeScript
+**2026-05-16** · Mac M-series 128 Go · 7 modèles · 32 samples · PHP/Python/JS/Java/Bash/TypeScript
 
 ---
 

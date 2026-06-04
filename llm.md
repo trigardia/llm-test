@@ -1,5 +1,5 @@
 # LLMs Locaux — Stack Dev + Sécurité
-> MacBook Pro M5 Max 128 Go · Symfony · JavaScript · Python · Java · Bash · K8s · ELK · Pentest  
+> Mac M-series 128 Go · Symfony · JavaScript · Python · Java · Bash · K8s · ELK · Pentest  
 > Dernière mise à jour : 2026-05-08 — benchmarks réels mesurés
 
 ---
